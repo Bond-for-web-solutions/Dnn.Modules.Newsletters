@@ -1,0 +1,249 @@
+@using Dnn.Modules.Newsletters.Models
+@using DNNConnect.CKEditorProvider.Web
+@using DotNetNuke.Web.MvcPipeline.Modules
+@model NewsletterViewModel
+
+<div class="dnnForm dnnNewsletters dnnClear" id="dnnNewsletters" data-moduleid="@Model.ModuleId">
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="@Model.StatusCssClass">@Model.StatusMessage</div>
+    }
+
+    <ul class="dnnAdminTabNav dnnClear">
+        <li><a href="#newMessage">@Html.LocalizeString("Message")</a></li>
+        <li><a href="#newAdvancedSettings">@Html.LocalizeString("AdvancedSettings")</a></li>
+    </ul>
+
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="IsHtmlMessage" value="true" />
+
+        <div class="newMessage" id="newMessage">
+            <fieldset>
+                <div class="dnnFormItem">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("recipients", Html.LocalizeString("plRoles"))
+                    </div>
+                    <input type="text" id="recipients" name="Recipients" value="@Model.Recipients" />
+                </div>
+
+                @if (Model.LanguagesVisible && Model.AvailableLanguages.Count > 0)
+                {
+                    <div class="dnnFormItem">
+                        <div class="dnnLabel" style="position:relative">
+                            <label>@Html.LocalizeString("plLanguages")</label>
+                        </div>
+                        <div class="dnnLangSelector">
+                            <ul>
+                                @foreach (var language in Model.AvailableLanguages)
+                                {
+                                    <li>
+                                        <label>
+                                            <input type="checkbox" name="SelectedLanguages" value="@language.Value" @(language.Selected ? "checked=\"checked\"" : string.Empty) />
+                                            @language.Text
+                                        </label>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+
+                <div class="dnnFormItem">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("AdditionalEmails", Html.LocalizeString("plEmail"))
+                    </div>
+                    <textarea id="AdditionalEmails" name="AdditionalEmails" rows="3" class="noResize">@Model.AdditionalEmails</textarea>
+                </div>
+
+                <div class="dnnFormItem">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("From", Html.LocalizeString("plFrom"))
+                    </div>
+                    <input type="text" id="From" name="From" maxlength="100" value="@Model.From" />
+                </div>
+
+                <div class="dnnFormItem">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("ReplyTo", Html.LocalizeString("plReplyTo"))
+                    </div>
+                    <input type="text" id="ReplyTo" name="ReplyTo" maxlength="100" value="@Model.ReplyTo" />
+                </div>
+
+                <div class="dnnFormItem">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("Subject", Html.LocalizeString("plSubject"))
+                    </div>
+                    <input type="text" id="Subject" name="Subject" maxlength="100" value="@Model.Subject" />
+                </div>
+
+                <div class="dnnFormItem ckediv">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("Message", Html.LocalizeString("Message"))
+                    </div>
+                    @Html.CKEditorEditorFor(x => x.Message, Model.ModuleId)
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="newAdvancedSettings" id="newAdvancedSettings">
+            <fieldset>
+                <div class="dnnFormItem dnnNewsletterAttachment">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("AttachmentUrl", Html.LocalizeString("plAttachment"))
+                    </div>
+                    <div class="dnnLeft">
+                        <input type="text" id="AttachmentUrl" name="AttachmentUrl" value="@Model.AttachmentUrl" placeholder="FileID=123" />
+                        @if (!string.IsNullOrWhiteSpace(Model.AttachmentFileName))
+                        {
+                            <div class="dnnFormMessage dnnFormInfo">@Model.AttachmentFileName</div>
+                        }
+                        else
+                        {
+                            <div class="dnnFormMessage dnnFormInfo">Gebruik een DNN bestandsreferentie zoals <code>FileID=123</code>.</div>
+                        }
+                    </div>
+                </div>
+
+                <div class="dnnFormItem">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("ReplaceTokens", Html.LocalizeString("plReplaceTokens"))
+                    </div>
+                    <input type="checkbox" id="ReplaceTokens" name="ReplaceTokens" @(Model.ReplaceTokens ? "checked=\"checked\"" : string.Empty) />
+                </div>
+
+                <div class="dnnFormItem">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("Priority", Html.LocalizeString("plPriority"))
+                    </div>
+                    <select id="Priority" name="Priority">
+                        <option value="1" @(Model.Priority == "1" ? "selected=\"selected\"" : string.Empty)>@Html.LocalizeString("High")</option>
+                        <option value="2" @(Model.Priority == "2" ? "selected=\"selected\"" : string.Empty)>@Html.LocalizeString("Normal")</option>
+                        <option value="3" @(Model.Priority == "3" ? "selected=\"selected\"" : string.Empty)>@Html.LocalizeString("Low")</option>
+                    </select>
+                </div>
+
+                <div class="dnnFormItem">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("SendMethod", Html.LocalizeString("plSendMethod"))
+                    </div>
+                    <select id="SendMethod" name="SendMethod">
+                        <option value="TO" @(Model.SendMethod == "TO" ? "selected=\"selected\"" : string.Empty)>@Html.LocalizeString("SendTo")</option>
+                        <option value="BCC" @(Model.SendMethod == "BCC" ? "selected=\"selected\"" : string.Empty)>@Html.LocalizeString("SendBCC")</option>
+                        <option value="RELAY" @(Model.SendMethod == "RELAY" ? "selected=\"selected\"" : string.Empty)>@Html.LocalizeString("SendRelay")</option>
+                    </select>
+                </div>
+
+                <div class="dnnFormItem" id="pnlRelayAddress" style="display:@(Model.RelayAddressVisible ? "block" : "none")">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("RelayAddress", Html.LocalizeString("plRelayAddress"))
+                    </div>
+                    <input type="text" id="RelayAddress" name="RelayAddress" maxlength="100" value="@Model.RelayAddress" />
+                </div>
+
+                <div class="dnnFormItem">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("SendAction", Html.LocalizeString("plSendAction"))
+                    </div>
+                    <div class="dnnNewsletterRadios">
+                        <input type="radio" id="Sendaction-S" name="SendAction" value="S" @(Model.SendAction == "S" ? "checked=\"checked\"" : string.Empty) />
+                        <label for="Sendaction-S">@Html.LocalizeString("Synchronous")</label>
+                        <input type="radio" id="Sendaction-A" name="SendAction" value="A" @(Model.SendAction == "A" ? "checked=\"checked\"" : string.Empty) />
+                        <label for="Sendaction-A">@Html.LocalizeString("Asynchronous")</label>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="commands">
+            <div class="dnnLabel" style="position:relative">&#160;</div>
+            <div style="display:inline-block;">
+                <ul class="dnnActions dnnClear">
+                    <li><button type="submit" name="command" value="Send" class="dnnPrimaryAction">@Html.LocalizeString("cmdSend")</button></li>
+                    <li><button type="submit" name="command" value="Preview" class="dnnSecondaryAction">@Html.LocalizeString("cmdPreview")</button></li>
+                </ul>
+            </div>
+        </div>
+
+            if (Model.PreviewVisible)
+            {
+            <div class="dnnForm">
+                <table>
+                    <tr>
+                        <td style="width:100px; vertical-align:top">@Html.LocalizeString("Preview")</td>
+                        <td style="width:460px;"></td>
+                    </tr>
+                    <tr>
+                        <td style="width:100px; vertical-align:top">@Html.LocalizeString("plSubject")</td>
+                        <td style="width:460px;">@Model.PreviewSubject</td>
+                    </tr>
+                    <tr>
+                        <td style="width:100px; vertical-align:top">@Html.LocalizeString("Message")</td>
+                        <td style="width:460px;">@Html.Raw(Model.PreviewBody)</td>
+                    </tr>
+                </table>
+                <ul class="dnnActions dnnClear">
+                    <li><button type="submit" name="command" value="CancelPreview" class="dnnPrimaryAction">@Html.LocalizeString("cmdCancelPreview")</button></li>
+                </ul>
+            </div>
+            }
+            }
+        </div>
+
+<script type="text/javascript">
+    (function ($) {
+        function setUpDnnNewsletter() {
+            $('#dnnNewsletters').dnnTabs();
+
+            var mid = @Model.ModuleId;
+            var serviceUrl = $.ServicesFramework(mid).getServiceRoot('InternalServices') + 'MessagingService/Search';
+
+            if (!$('#recipients').data('tokenInputObject')) {
+                $('#recipients').tokenInput(serviceUrl, {
+                    theme: 'facebook',
+                    prePopulate: @Html.Raw(Model.InitialEntries ?? "[]"),
+                    minChars: 2,
+                    preventDuplicates: true,
+                    hintText: '',
+                    noResultsText: '@Html.LocalizeString("NoResults")',
+                    searchingText: '@Html.LocalizeString("Searching")',
+                    resultsFormatter: function (item) {
+                        if (item.id && item.id.indexOf('user-') === 0) {
+                            return "<li class='user'><img src='" + item.iconfile + "' title='" + item.name + "' height='25' width='25' /><span>" + item.name + "</span></li>";
+                        }
+
+                        if (item.id && item.id.indexOf('role-') === 0) {
+                            return "<li class='role'><img src='" + item.iconfile + "' title='" + item.name + "' height='25' width='25' /><span>" + item.name + "</span></li>";
+                        }
+
+                        return '<li>' + item.name + '</li>';
+                    },
+                    onError: function (xhr, status) {
+                        var messageNode = $('<div/>')
+                            .addClass('dnnFormMessage dnnFormWarning')
+                            .text('An error occurred while getting suggestions: ' + status);
+
+                        $('#recipients').before(messageNode);
+
+                        messageNode.fadeOut(3000, 'easeInExpo', function () {
+                            messageNode.remove();
+                        });
+                    }
+                });
+            }
+
+            $('label[for="recipients"]').attr('for', 'token-input-recipients');
+            toggleRelayAddress();
+        }
+
+        function toggleRelayAddress() {
+            $('#pnlRelayAddress').toggle($('#SendMethod').val() === 'RELAY');
+        }
+
+        $(function () {
+            setUpDnnNewsletter();
+            $('#SendMethod').on('change', toggleRelayAddress);
+        });
+    }(jQuery));
+</script>
