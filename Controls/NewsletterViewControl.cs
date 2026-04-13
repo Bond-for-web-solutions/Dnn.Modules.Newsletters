@@ -20,7 +20,7 @@
 #endregion
 
 using Dnn.Modules.Newsletters.Components;
-using Dnn.Modules.Newsletters.ViewModels;
+using Dnn.Modules.Newsletters.Models;
 using DotNetNuke.Abstractions.Application;
 using DotNetNuke.Common;
 using DotNetNuke.Common.Utilities;
@@ -91,6 +91,8 @@ namespace Dnn.Modules.Newsletters.Controls
                             return View(model);
                         case "Send":
                             return HandleSend(model);
+                        case "Upload":
+                            return HandleUpload(model);
                     }
                 }
 
@@ -107,6 +109,8 @@ namespace Dnn.Modules.Newsletters.Controls
         {
             var selectedLanguages = new List<string>();
             var locales = LocaleController.Instance.GetLocales(PortalSettings.PortalId);
+            var rootFolder = FolderManager.Instance.GetFolder(PortalId, string.Empty);
+            var rootFolderId = rootFolder?.FolderID ?? 0;
 
             return new NewsletterViewModel
             {
@@ -126,7 +130,14 @@ namespace Dnn.Modules.Newsletters.Controls
                         Text = locale.Value.Text,
                         Selected = selectedLanguages.Contains(locale.Key, StringComparer.OrdinalIgnoreCase)
                     })
-                    .ToList()
+                    .ToList(),
+                Attachment = new AttachmentPickerModel
+                {
+                    ModuleId = ModuleId,
+                    SelectedFolderId = rootFolderId,
+                    Folders = GetPortalFolders(),
+                    Files = GetFilesInFolder(rootFolderId)
+                }
             };
         }
 
@@ -138,7 +149,6 @@ namespace Dnn.Modules.Newsletters.Controls
             model.Message = Request.Form["Message"] ?? string.Empty;
             model.From = Request.Form["From"] ?? string.Empty;
             model.ReplyTo = Request.Form["ReplyTo"] ?? string.Empty;
-            model.AttachmentUrl = Request.Form["AttachmentUrl"] ?? string.Empty;
             model.RelayAddress = Request.Form["RelayAddress"] ?? string.Empty;
             model.Priority = Request.Form["Priority"] ?? "2";
             model.SendMethod = Request.Form["SendMethod"] ?? "TO";
@@ -146,6 +156,26 @@ namespace Dnn.Modules.Newsletters.Controls
             model.ReplaceTokens = !string.IsNullOrEmpty(Request.Form["ReplaceTokens"]);
             model.IsHtmlMessage = !string.Equals(Request.Form["IsHtmlMessage"], "false", StringComparison.OrdinalIgnoreCase);
             model.RelayAddressVisible = string.Equals(model.SendMethod, "RELAY", StringComparison.OrdinalIgnoreCase);
+
+            // Attachment folder/file picker
+            model.Attachment.ModuleId = ModuleId;
+            if (int.TryParse(Request.Form["AttachmentFolderId"], out var folderId))
+            {
+                model.Attachment.SelectedFolderId = folderId;
+            }
+
+            if (int.TryParse(Request.Form["AttachmentFileId"], out var fileId) && fileId > 0)
+            {
+                model.Attachment.SelectedFileId = fileId;
+                model.AttachmentUrl = "FileID=" + fileId;
+            }
+            else
+            {
+                model.AttachmentUrl = string.Empty;
+            }
+
+            model.Attachment.Folders = GetPortalFolders();
+            model.Attachment.Files = GetFilesInFolder(model.Attachment.SelectedFolderId);
 
             var selectedLanguages = Request.Form.GetValues("SelectedLanguages") ?? Array.Empty<string>();
             model.SelectedLanguages = selectedLanguages.Where(value => !string.IsNullOrWhiteSpace(value)).ToList();
@@ -155,7 +185,37 @@ namespace Dnn.Modules.Newsletters.Controls
                 language.Selected = model.SelectedLanguages.Contains(language.Value, StringComparer.OrdinalIgnoreCase);
             }
 
-            model.AttachmentFileName = ResolveAttachmentFileName(model.AttachmentUrl);
+            model.Attachment.SelectedFileName = ResolveAttachmentFileName(model.AttachmentUrl);
+        }
+
+        private List<AttachmentPickerModel.FolderOption> GetPortalFolders()
+        {
+            return FolderManager.Instance.GetFolders(PortalId)
+                .OrderBy(f => f.FolderPath)
+                .Select(f => new AttachmentPickerModel.FolderOption
+                {
+                    FolderId = f.FolderID,
+                    DisplayName = string.IsNullOrEmpty(f.FolderPath) ? "Site Root" : f.FolderPath.TrimEnd('/')
+                })
+                .ToList();
+        }
+
+        private List<AttachmentPickerModel.FileOption> GetFilesInFolder(int folderId)
+        {
+            var folder = FolderManager.Instance.GetFolder(folderId);
+            if (folder == null)
+            {
+                return new List<AttachmentPickerModel.FileOption>();
+            }
+
+            return FolderManager.Instance.GetFiles(folder)
+                .OrderBy(f => f.FileName)
+                .Select(f => new AttachmentPickerModel.FileOption
+                {
+                    FileId = f.FileId,
+                    FileName = f.FileName
+                })
+                .ToList();
         }
 
         private IRazorModuleResult HandlePreview(NewsletterViewModel model)
@@ -213,6 +273,52 @@ namespace Dnn.Modules.Newsletters.Controls
                 SetStatus(model, Localization.GetString("NoMessagesSentPlusError", LocalResourceFile), "warning", ex.Message);
                 return View(model);
             }
+        }
+
+        private IRazorModuleResult HandleUpload(NewsletterViewModel model)
+        {
+            try
+            {
+                var httpRequest = System.Web.HttpContext.Current.Request;
+                HttpPostedFile uploadedFile = null;
+
+                if (httpRequest.Files.Count > 0)
+                {
+                    uploadedFile = httpRequest.Files["UploadFile"] ?? httpRequest.Files[0];
+                }
+
+                if (uploadedFile == null || uploadedFile.ContentLength == 0)
+                {
+                    SetStatus(model, "Please select a file to upload.", "warning");
+                    return View(model);
+                }
+                var folder = FolderManager.Instance.GetFolder(model.Attachment.SelectedFolderId);
+                if (folder == null)
+                {
+                    SetStatus(model, "Selected folder not found.", "error");
+                    return View(model);
+                }
+
+                var fileName = System.IO.Path.GetFileName(uploadedFile.FileName);
+                var file = _fileManager.AddFile(folder, fileName, uploadedFile.InputStream, true);
+
+                // Select the newly uploaded file
+                model.Attachment.SelectedFileId = file.FileId;
+                model.AttachmentUrl = "FileID=" + file.FileId;
+                model.Attachment.SelectedFileName = file.FileName;
+
+                // Refresh the file list for the current folder
+                model.Attachment.Files = GetFilesInFolder(model.Attachment.SelectedFolderId);
+
+                SetStatus(model, "File '" + fileName + "' uploaded successfully.", "success");
+            }
+            catch (Exception ex)
+            {
+                Exceptions.LogException(ex);
+                SetStatus(model, "Upload failed: " + ex.Message, "error");
+            }
+
+            return View(model);
         }
 
         private void SendEmail(NewsletterViewModel model, List<string> roleNames, List<UserInfo> users)

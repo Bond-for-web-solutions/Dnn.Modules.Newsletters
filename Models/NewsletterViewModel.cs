@@ -21,7 +21,7 @@
 
 using System.Collections.Generic;
 
-namespace Dnn.Modules.Newsletters.ViewModels
+namespace Dnn.Modules.Newsletters.Models
 {
     /// <summary>
     /// Represents the data required to compose and send a newsletter, including recipients, message content, and
@@ -44,6 +44,8 @@ namespace Dnn.Modules.Newsletters.ViewModels
             /// <summary>Gets or sets a value indicating whether this language is selected.</summary>
             public bool Selected { get; set; }
         }
+
+
 
         /// <summary>
         /// Gets or sets the recipients of the newsletter.
@@ -94,9 +96,9 @@ namespace Dnn.Modules.Newsletters.ViewModels
         /// </summary>
         public string AttachmentUrl { get; set; }
         /// <summary>
-        /// Gets or sets the resolved attachment file name when the attachment points to a DNN file.
+        /// Gets or sets the attachment picker model for folder/file selection and upload.
         /// </summary>
-        public string AttachmentFileName { get; set; }
+        public AttachmentPickerModel Attachment { get; set; } = new AttachmentPickerModel();
         /// <summary>
         /// Gets or sets a value indicating whether tokens in the input should be replaced with their corresponding
         /// values.
