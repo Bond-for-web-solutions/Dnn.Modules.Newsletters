@@ -273,4 +273,13 @@
   <data name="Searching.Text" xml:space="preserve">
     <value>Zoeken...</value>
   </data>
+  <data name="MessageMode.Text" xml:space="preserve">
+    <value>Bewerkmodus</value>
+  </data>
+  <data name="RichText.Text" xml:space="preserve">
+    <value>Opgemaakte tekst (HTML)</value>
+  </data>
+  <data name="BasicText.Text" xml:space="preserve">
+    <value>Platte tekst</value>
+  </data>
 </root>

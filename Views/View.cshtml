@@ -17,7 +17,7 @@
     @using (Html.BeginForm())
     {
         @Html.AntiForgeryToken()
-        <input type="hidden" name="IsHtmlMessage" value="true" />
+        <input type="hidden" id="IsHtmlMessage" name="IsHtmlMessage" value="@(Model.IsHtmlMessage ? "true" : "false")" />
 
         <div class="newMessage" id="newMessage">
             <fieldset>
@@ -78,11 +78,28 @@
                     <input type="text" id="Subject" name="Subject" maxlength="100" value="@Model.Subject" />
                 </div>
 
-                <div class="dnnFormItem ckediv">
+                <div class="dnnFormItem">
+                    <div class="dnnLabel" style="position:relative">
+                        <label>@Html.LocalizeString("MessageMode")</label>
+                    </div>
+                    <select id="MessageMode" class="dnnFormInput">
+                        <option value="RICH" @(Model.IsHtmlMessage ? "selected=\"selected\"" : string.Empty)>@Html.LocalizeString("RichText")</option>
+                        <option value="BASIC" @(!Model.IsHtmlMessage ? "selected=\"selected\"" : string.Empty)>@Html.LocalizeString("BasicText")</option>
+                    </select>
+                </div>
+
+                <div class="dnnFormItem ckediv" id="richTextEditor" style="display:@(Model.IsHtmlMessage ? "block" : "none")">
                     <div class="dnnLabel" style="position:relative">
                         @Html.Label("Message", Html.LocalizeString("Message"))
                     </div>
                     @Html.CKEditorEditorFor(x => x.Message, Model.ModuleId)
+                </div>
+
+                <div class="dnnFormItem" id="plainTextEditor" style="display:@(!Model.IsHtmlMessage ? "block" : "none")">
+                    <div class="dnnLabel" style="position:relative">
+                        @Html.Label("MessagePlain", Html.LocalizeString("Message"))
+                    </div>
+                    <textarea id="MessagePlain" name="MessagePlain" rows="15" style="width:100%">@(Model.IsHtmlMessage ? "" : Model.Message)</textarea>
                 </div>
             </fieldset>
         </div>
@@ -241,9 +258,18 @@
             $('#pnlRelayAddress').toggle($('#SendMethod').val() === 'RELAY');
         }
 
+        function toggleMessageMode() {
+            var mode = $('#MessageMode').val();
+            var isHtml = (mode === 'RICH');
+            $('#IsHtmlMessage').val(isHtml ? 'true' : 'false');
+            $('#richTextEditor').toggle(isHtml);
+            $('#plainTextEditor').toggle(!isHtml);
+        }
+
         $(function () {
             setUpDnnNewsletter();
             $('#SendMethod').on('change', toggleRelayAddress);
+            $('#MessageMode').on('change', toggleMessageMode);
         });
     }(jQuery));
 </script>

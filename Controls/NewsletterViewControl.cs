@@ -148,6 +148,16 @@ namespace Dnn.Modules.Newsletters.Controls
                 "false",
                 StringComparison.OrdinalIgnoreCase
             );
+
+            // Use plain text message when not in HTML mode
+            if (!model.IsHtmlMessage)
+            {
+                var plainText = form["MessagePlain"] ?? string.Empty;
+                if (!string.IsNullOrEmpty(plainText))
+                {
+                    model.Message = plainText;
+                }
+            }
             model.RelayAddressVisible = string.Equals(
                 model.SendMethod,
                 "RELAY",

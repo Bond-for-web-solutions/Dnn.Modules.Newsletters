@@ -284,4 +284,13 @@
   <data name="Searching.Text" xml:space="preserve">
     <value>Searching...</value>
   </data>
+  <data name="MessageMode.Text" xml:space="preserve">
+    <value>Editor Mode</value>
+  </data>
+  <data name="RichText.Text" xml:space="preserve">
+    <value>Rich Text (HTML)</value>
+  </data>
+  <data name="BasicText.Text" xml:space="preserve">
+    <value>Basic Text</value>
+  </data>
 </root>
