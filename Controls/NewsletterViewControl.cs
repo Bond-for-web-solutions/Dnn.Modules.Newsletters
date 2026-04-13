@@ -20,7 +20,7 @@
 #endregion
 
 using Dnn.Modules.Newsletters.Components;
-using Dnn.Modules.Newsletters.Models;
+using Dnn.Modules.Newsletters.ViewModels;
 using DotNetNuke.Abstractions.Application;
 using DotNetNuke.Common;
 using DotNetNuke.Common.Utilities;

@@ -21,7 +21,7 @@
 
 using System.Collections.Generic;
 
-namespace Dnn.Modules.Newsletters.Models
+namespace Dnn.Modules.Newsletters.ViewModels
 {
     /// <summary>
     /// Represents the data required to compose and send a newsletter, including recipients, message content, and
