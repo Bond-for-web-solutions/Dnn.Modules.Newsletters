@@ -24,6 +24,7 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
+  <Import Project="BuildScripts\BuildProperties.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -94,29 +95,29 @@
   <ItemGroup>
     <Reference Include="DotNetNuke, Version=10.99.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\bin\DotNetNuke.dll</HintPath>
+      <HintPath>$(DnnBinRoot)DotNetNuke.dll</HintPath>
     </Reference>
     <Reference Include="DotNetNuke.Abstractions, Version=10.99.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Bin\DotNetNuke.Abstractions.dll</HintPath>
+      <HintPath>$(DnnBinRoot)DotNetNuke.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="DotNetNuke.Web, Version=10.99.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\bin\DotNetNuke.Web.dll</HintPath>
+      <HintPath>$(DnnBinRoot)DotNetNuke.Web.dll</HintPath>
     </Reference>
     <Reference Include="DotNetNuke.Web.Mvc">
-      <HintPath>..\..\..\bin\DotNetNuke.Web.Mvc.dll</HintPath>
+      <HintPath>$(DnnBinRoot)DotNetNuke.Web.Mvc.dll</HintPath>
     </Reference>
     <Reference Include="DotNetNuke.Web.MvcPipeline">
-      <HintPath>..\..\..\bin\DotNetNuke.Web.MvcPipeline.dll</HintPath>
+      <HintPath>$(DnnBinRoot)DotNetNuke.Web.MvcPipeline.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Extensions.DependencyInjection, Version=9.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\bin\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+      <HintPath>$(DnnBinRoot)Microsoft.Extensions.DependencyInjection.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=9.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\bin\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+      <HintPath>$(DnnBinRoot)Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -126,7 +127,7 @@
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Mvc, Version=5.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>bin\System.Web.Mvc.dll</HintPath>
+      <HintPath>$(DnnBinRoot)System.Web.Mvc.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
