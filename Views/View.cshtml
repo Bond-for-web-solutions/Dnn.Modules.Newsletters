@@ -89,22 +89,7 @@
 
         <div class="newAdvancedSettings" id="newAdvancedSettings">
             <fieldset>
-                <div class="dnnFormItem dnnNewsletterAttachment">
-                    <div class="dnnLabel" style="position:relative">
-                        @Html.Label("AttachmentUrl", Html.LocalizeString("plAttachment"))
-                    </div>
-                    <div class="dnnLeft">
-                        <input type="text" id="AttachmentUrl" name="AttachmentUrl" value="@Model.AttachmentUrl" placeholder="FileID=123" />
-                        @if (!string.IsNullOrWhiteSpace(Model.AttachmentFileName))
-                        {
-                            <div class="dnnFormMessage dnnFormInfo">@Model.AttachmentFileName</div>
-                        }
-                        else
-                        {
-                            <div class="dnnFormMessage dnnFormInfo">Gebruik een DNN bestandsreferentie zoals <code>FileID=123</code>.</div>
-                        }
-                    </div>
-                </div>
+                @Html.Partial("~/DesktopModules/Admin/Newsletters/Views/Shared/_AttachmentPicker.cshtml", Model.Attachment)
 
                 <div class="dnnFormItem">
                     <div class="dnnLabel" style="position:relative">
@@ -241,9 +226,35 @@
             $('#pnlRelayAddress').toggle($('#SendMethod').val() === 'RELAY');
         }
 
+        function loadFilesForFolder(folderId) {
+            var sf = $.ServicesFramework(mid);
+            $.ajax({
+                url: sf.getServiceRoot('InternalServices') + 'FileUpload/LoadFiles',
+                data: { parentId: folderId.toString(), filter: '', required: false },
+                beforeSend: sf.setModuleHeaders,
+                success: function (data) {
+                    var $fileSelect = $('#Attachment_FileId');
+                    $fileSelect.empty().append('<option value="">&lt;None Specified&gt;</option>');
+                    if (data) {
+                        $.each(data, function (i, item) {
+                            $fileSelect.append($('<option></option>').val(item.file_id).text(item.file_name));
+                        });
+                    }
+                }
+            });
+        }
+
         $(function () {
+            // Set multipart encoding for file upload on all parent forms
+            var $form = $('#dnnNewsletters').closest('form');
+            $form.attr('enctype', 'multipart/form-data').attr('encoding', 'multipart/form-data');
+            $('form#Form').attr('enctype', 'multipart/form-data').attr('encoding', 'multipart/form-data');
+
             setUpDnnNewsletter();
             $('#SendMethod').on('change', toggleRelayAddress);
+            $('#Attachment_FolderId').on('change', function () {
+                loadFilesForFolder($(this).val());
+            });
         });
     }(jQuery));
 </script>

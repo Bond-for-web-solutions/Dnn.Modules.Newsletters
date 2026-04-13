@@ -57,15 +57,20 @@ namespace Dnn.Modules.Newsletters.Controls
     {
         private readonly IMailSettings _mailSettings;
         private readonly IFileManager _fileManager;
+        private readonly IHostSettings _hostSettings;
 
         private UserInfo CurrentUser => UserController.Instance.GetCurrentUserInfo();
 
+        /// <summary>Initializes a new instance of the <see cref="NewsletterViewControl"/> class.</summary>
         public NewsletterViewControl()
         {
             _mailSettings = DependencyProvider.GetRequiredService<IMailSettings>();
             _fileManager = DependencyProvider.GetRequiredService<IFileManager>();
+            _hostSettings = DependencyProvider.GetRequiredService<IHostSettings>();
         }
 
+        /// <summary>Invokes the newsletter view control and returns the Razor module result.</summary>
+        /// <returns>An <see cref="IRazorModuleResult"/> representing the rendered view.</returns>
         public override IRazorModuleResult Invoke()
         {
             try
@@ -76,7 +81,7 @@ namespace Dnn.Modules.Newsletters.Controls
                 {
                     MapRequestToModel(model);
 
-                    var command = Request.Form["command"];
+                    var command = Request.Unvalidated.Form["command"];
                     switch (command)
                     {
                         case "Preview":
@@ -86,6 +91,8 @@ namespace Dnn.Modules.Newsletters.Controls
                             return View(model);
                         case "Send":
                             return HandleSend(model);
+                        case "Upload":
+                            return HandleUpload(model);
                     }
                 }
 
@@ -102,6 +109,8 @@ namespace Dnn.Modules.Newsletters.Controls
         {
             var selectedLanguages = new List<string>();
             var locales = LocaleController.Instance.GetLocales(PortalSettings.PortalId);
+            var rootFolder = FolderManager.Instance.GetFolder(PortalId, string.Empty);
+            var rootFolderId = rootFolder?.FolderID ?? 0;
 
             return new NewsletterViewModel
             {
@@ -121,36 +130,105 @@ namespace Dnn.Modules.Newsletters.Controls
                         Text = locale.Value.Text,
                         Selected = selectedLanguages.Contains(locale.Key, StringComparer.OrdinalIgnoreCase)
                     })
-                    .ToList()
+                    .ToList(),
+                Attachment = new AttachmentPickerModel
+                {
+                    ModuleId = ModuleId,
+                    SelectedFolderId = rootFolderId,
+                    Folders = GetPortalFolders(),
+                    Files = GetFilesInFolder(rootFolderId)
+                }
             };
         }
 
         private void MapRequestToModel(NewsletterViewModel model)
         {
-            model.Recipients = Request.Form["Recipients"] ?? string.Empty;
-            model.AdditionalEmails = Request.Form["AdditionalEmails"] ?? string.Empty;
-            model.Subject = Request.Form["Subject"] ?? string.Empty;
-            model.Message = Request.Form["Message"] ?? string.Empty;
-            model.From = Request.Form["From"] ?? string.Empty;
-            model.ReplyTo = Request.Form["ReplyTo"] ?? string.Empty;
-            model.AttachmentUrl = Request.Form["AttachmentUrl"] ?? string.Empty;
-            model.RelayAddress = Request.Form["RelayAddress"] ?? string.Empty;
-            model.Priority = Request.Form["Priority"] ?? "2";
-            model.SendMethod = Request.Form["SendMethod"] ?? "TO";
-            model.SendAction = Request.Form["SendAction"] ?? "A";
-            model.ReplaceTokens = !string.IsNullOrEmpty(Request.Form["ReplaceTokens"]);
-            model.IsHtmlMessage = !string.Equals(Request.Form["IsHtmlMessage"], "false", StringComparison.OrdinalIgnoreCase);
+            var form = Request.Unvalidated.Form;
+            model.Recipients = form["Recipients"] ?? string.Empty;
+            model.AdditionalEmails = form["AdditionalEmails"] ?? string.Empty;
+            model.Subject = form["Subject"] ?? string.Empty;
+            model.Message = form["Message"] ?? string.Empty;
+            model.From = form["From"] ?? string.Empty;
+            model.ReplyTo = form["ReplyTo"] ?? string.Empty;
+            model.RelayAddress = form["RelayAddress"] ?? string.Empty;
+            model.Priority = form["Priority"] ?? "2";
+            model.SendMethod = form["SendMethod"] ?? "TO";
+            model.SendAction = form["SendAction"] ?? "A";
+            model.ReplaceTokens = !string.IsNullOrEmpty(form["ReplaceTokens"]);
+            model.IsHtmlMessage = !string.Equals(form["IsHtmlMessage"], "false", StringComparison.OrdinalIgnoreCase);
             model.RelayAddressVisible = string.Equals(model.SendMethod, "RELAY", StringComparison.OrdinalIgnoreCase);
 
-            var selectedLanguages = Request.Form.GetValues("SelectedLanguages") ?? Array.Empty<string>();
+            // Attachment folder/file picker
+            model.Attachment.ModuleId = ModuleId;
+            if (int.TryParse(form["AttachmentFolderId"], out var folderId))
+            {
+                model.Attachment.SelectedFolderId = folderId;
+            }
+
+            model.Attachment.Folders = GetPortalFolders();
+            model.Attachment.Files = GetFilesInFolder(model.Attachment.SelectedFolderId);
+
+            // Read existing attachment file IDs from hidden inputs
+            var existingFileIds = form.GetValues("AttachmentFileIds");
+            if (existingFileIds != null)
+            {
+                foreach (var idStr in existingFileIds)
+                {
+                    if (int.TryParse(idStr, out var afid) && afid > 0)
+                    {
+                        var existingFile = _fileManager.GetFile(afid);
+                        if (existingFile != null)
+                        {
+                            model.Attachment.SelectedAttachments.Add(new AttachmentPickerModel.FileOption
+                            {
+                                FileId = existingFile.FileId,
+                                FileName = existingFile.FileName
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Process newly uploaded files from the drop zone
+            ProcessFileUploads(model);
+
+            var selectedLanguages = form.GetValues("SelectedLanguages") ?? Array.Empty<string>();
             model.SelectedLanguages = selectedLanguages.Where(value => !string.IsNullOrWhiteSpace(value)).ToList();
 
             foreach (var language in model.AvailableLanguages)
             {
                 language.Selected = model.SelectedLanguages.Contains(language.Value, StringComparer.OrdinalIgnoreCase);
             }
+        }
 
-            model.AttachmentFileName = ResolveAttachmentFileName(model.AttachmentUrl);
+        private List<AttachmentPickerModel.FolderOption> GetPortalFolders()
+        {
+            return FolderManager.Instance.GetFolders(PortalId)
+                .OrderBy(f => f.FolderPath)
+                .Select(f => new AttachmentPickerModel.FolderOption
+                {
+                    FolderId = f.FolderID,
+                    DisplayName = string.IsNullOrEmpty(f.FolderPath) ? "Site Root" : f.FolderPath.TrimEnd('/')
+                })
+                .ToList();
+        }
+
+        private List<AttachmentPickerModel.FileOption> GetFilesInFolder(int folderId)
+        {
+            var folder = FolderManager.Instance.GetFolder(folderId);
+            if (folder == null)
+            {
+                return new List<AttachmentPickerModel.FileOption>();
+            }
+
+            return FolderManager.Instance.GetFiles(folder)
+                .OrderBy(f => f.FileName)
+                .Select(f => new AttachmentPickerModel.FileOption
+                {
+                    FileId = f.FileId,
+                    FileName = f.FileName
+                })
+                .ToList();
         }
 
         private IRazorModuleResult HandlePreview(NewsletterViewModel model)
@@ -208,6 +286,58 @@ namespace Dnn.Modules.Newsletters.Controls
                 SetStatus(model, Localization.GetString("NoMessagesSentPlusError", LocalResourceFile), "warning", ex.Message);
                 return View(model);
             }
+        }
+
+        private IRazorModuleResult HandleUpload(NewsletterViewModel model)
+        {
+            // File uploads are now processed in MapRequestToModel via ProcessFileUploads
+            if (model.Attachment.SelectedAttachments.Count > 0)
+            {
+                SetStatus(model, string.Format("{0} file(s) attached.", model.Attachment.SelectedAttachments.Count), "success");
+            }
+
+            return View(model);
+        }
+
+        private void ProcessFileUploads(NewsletterViewModel model)
+        {
+            var httpRequest = System.Web.HttpContext.Current.Request;
+            if (httpRequest.Files.Count == 0)
+            {
+                return;
+            }
+
+            var folder = FolderManager.Instance.GetFolder(model.Attachment.SelectedFolderId);
+            if (folder == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < httpRequest.Files.Count; i++)
+            {
+                var uploaded = httpRequest.Files[i];
+                if (uploaded == null || uploaded.ContentLength == 0)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var fileName = System.IO.Path.GetFileName(uploaded.FileName);
+                    var file = _fileManager.AddFile(folder, fileName, uploaded.InputStream, true);
+                    model.Attachment.SelectedAttachments.Add(new AttachmentPickerModel.FileOption
+                    {
+                        FileId = file.FileId,
+                        FileName = file.FileName
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Exceptions.LogException(ex);
+                }
+            }
+
+            model.Attachment.Files = GetFilesInFolder(model.Attachment.SelectedFolderId);
         }
 
         private void SendEmail(NewsletterViewModel model, List<string> roleNames, List<UserInfo> users)
@@ -277,12 +407,15 @@ namespace Dnn.Modules.Newsletters.Controls
                 email.LanguageFilter = model.SelectedLanguages.ToArray();
             }
 
-            var attachmentFile = ResolveAttachment(model.AttachmentUrl);
-            if (attachmentFile != null)
+            foreach (var att in model.Attachment.SelectedAttachments)
             {
-                email.AddAttachment(
-                    _fileManager.GetFileContent(attachmentFile),
-                    new ContentType { MediaType = attachmentFile.ContentType, Name = attachmentFile.FileName });
+                var attachmentFile = _fileManager.GetFile(att.FileId);
+                if (attachmentFile != null)
+                {
+                    email.AddAttachment(
+                        _fileManager.GetFileContent(attachmentFile),
+                        new ContentType { MediaType = attachmentFile.ContentType, Name = attachmentFile.FileName });
+                }
             }
 
             switch (model.SendMethod)
@@ -453,7 +586,7 @@ namespace Dnn.Modules.Newsletters.Controls
                 }
                 else if (value.StartsWith("user-", StringComparison.OrdinalIgnoreCase))
                 {
-                    var user = UserController.GetUserById(PortalId, int.Parse(value.Substring(5)));
+                    var user = UserController.GetUserById(_hostSettings, PortalId, int.Parse(value.Substring(5)));
                     if (user != null)
                     {
                         users.Add(user);
@@ -471,7 +604,7 @@ namespace Dnn.Modules.Newsletters.Controls
 
             foreach (var value in (Request.QueryString["users"] ?? string.Empty).Split(','))
             {
-                if (int.TryParse(value, out id) && (user = UserController.GetUserById(PortalId, id)) != null)
+                if (int.TryParse(value, out id) && (user = UserController.GetUserById(_hostSettings, PortalId, id)) != null)
                 {
                     entities.AppendFormat(@"{{ ""id"": ""user-{0}"", ""name"": ""{1}"" }},", user.UserID, user.DisplayName.Replace("\"", string.Empty));
                 }
@@ -572,7 +705,19 @@ namespace Dnn.Modules.Newsletters.Controls
 
             // Register JavaScript files
             context.ClientResourceController
-                .CreateScript("~/DesktopModules/Admin/Newsletters/js/edit.js")
+                .CreateStylesheet("~/DesktopModules/Admin/Newsletters/Resources/css/module.css")
+                .Register();
+
+            context.ClientResourceController
+                .CreateStylesheet("~/DesktopModules/Admin/Newsletters/Resources/css/attachment-picker.css")
+                .Register();
+
+            context.ClientResourceController
+                .CreateScript("~/DesktopModules/Admin/Newsletters/Resources/js/edit.js")
+                .Register();
+
+            context.ClientResourceController
+                .CreateScript("~/DesktopModules/Admin/Newsletters/Resources/js/attachment-picker.js")
                 .Register();
 
             // Set page title

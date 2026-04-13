@@ -32,14 +32,20 @@ namespace Dnn.Modules.Newsletters.Models
     /// attachments, and various sending options such as priority and delivery method.</remarks>
     public class NewsletterViewModel
     {
+        /// <summary>Represents a language selection option for the newsletter.</summary>
         public class LanguageOption
         {
+            /// <summary>Gets or sets the language code value.</summary>
             public string Value { get; set; }
 
+            /// <summary>Gets or sets the display text for the language.</summary>
             public string Text { get; set; }
 
+            /// <summary>Gets or sets a value indicating whether this language is selected.</summary>
             public bool Selected { get; set; }
         }
+
+
 
         /// <summary>
         /// Gets or sets the recipients of the newsletter.
@@ -86,13 +92,9 @@ namespace Dnn.Modules.Newsletters.Models
         /// </summary>
         public string Message { get; set; }
         /// <summary>
-        /// Gets or sets the URL of the attachment associated with this item.
+        /// Gets or sets the attachment picker model for folder/file selection and upload.
         /// </summary>
-        public string AttachmentUrl { get; set; }
-        /// <summary>
-        /// Gets or sets the resolved attachment file name when the attachment points to a DNN file.
-        /// </summary>
-        public string AttachmentFileName { get; set; }
+        public AttachmentPickerModel Attachment { get; set; } = new AttachmentPickerModel();
         /// <summary>
         /// Gets or sets a value indicating whether tokens in the input should be replaced with their corresponding
         /// values.

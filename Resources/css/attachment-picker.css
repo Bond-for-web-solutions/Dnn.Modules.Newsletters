@@ -1,0 +1,213 @@
+/* Attachment Picker */
+.dnnFormItem.dnnAttachmentPicker {
+    overflow: visible;
+}
+
+.dnnAttachmentPicker .dnnInputFileWrapper {
+    display: none !important;
+}
+
+.dnnAttachmentPicker .attachment-hidden-input {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+}
+
+.dnnAttachmentPicker .attachment-picker-content {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px;
+    width: fit-content;
+}
+
+.dnnAttachmentPicker .attachment-picker-grid {
+    display: grid !important;
+    grid-template-columns: 1fr auto;
+    gap: 15px;
+    align-items: stretch;
+}
+
+.dnnAttachmentPicker .attachment-picker-left {
+    min-width: 0;
+}
+
+.dnnAttachmentPicker .attachment-picker-left .picker-label {
+    display: inline-block;
+    width: 50px;
+    text-align: right;
+    margin-top: .3125rem;
+    margin-right: 5px;
+    font-weight: normal;
+}
+
+.dnnAttachmentPicker .attachment-picker-row {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.dnnAttachmentPicker .attachment-picker-row select {
+    flex: 1;
+    min-width: 0;
+    width: auto !important;
+    float: none !important;
+}
+
+.dnnAttachmentPicker .attachment-picker-row .dnnSecondaryAction {
+    flex-shrink: 0;
+    padding: 4px 14px;
+    font-size: 12px;
+}
+
+/* Drop zone */
+.dnnAttachmentPicker .attachment-dropzone {
+    max-height: 150px !important;
+    max-width: 150px !important;
+    border: 2px dashed #c0c8d0;
+    border-radius: 8px;
+    background: #f7f9fc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.dnnAttachmentPicker .attachment-dropzone:hover {
+    border-color: #8899aa;
+    background: #eef2f7;
+}
+
+.dnnAttachmentPicker .attachment-dropzone.dragover {
+    border-color: #0078d4;
+    background: #e3f0fc;
+    border-style: solid;
+    box-shadow: 0 0 0 3px rgba(0,120,212,0.15);
+}
+
+.dnnAttachmentPicker .attachment-dropzone input[type="file"] {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    position: absolute !important;
+}
+
+.dnnAttachmentPicker .dropzone-content {
+    text-align: center;
+    color: #778;
+    pointer-events: none;
+    padding: 10px;
+}
+
+.dnnAttachmentPicker .dropzone-content p {
+    margin: 2px 0;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.dnnAttachmentPicker .dropzone-browse {
+    color: #0078d4;
+    text-decoration: underline;
+    pointer-events: auto;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* File list */
+.dnnAttachmentPicker .attachment-file-list {
+    clear: both;
+    margin-top: 10px;
+}
+
+.dnnAttachmentPicker .attachment-file-list:empty {
+    display: none;
+}
+
+.dnnAttachmentPicker .attachment-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    background: #f5f7fa;
+    border: 1px solid #dde0e4;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    transition: background-color 0.15s;
+}
+
+.dnnAttachmentPicker .attachment-item:hover {
+    background: #edf0f4;
+}
+
+.dnnAttachmentPicker .attachment-item-icon {
+    margin-right: 8px;
+    font-size: 15px;
+    flex-shrink: 0;
+    color: #667;
+}
+
+.dnnAttachmentPicker .attachment-item-name {
+    flex: 1;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #333;
+}
+
+.dnnAttachmentPicker .attachment-item-badge {
+    font-size: 11px;
+    color: #999;
+    margin-left: 10px;
+    font-style: italic;
+    flex-shrink: 0;
+}
+
+.dnnAttachmentPicker .attachment-item-remove {
+    margin: 0;
+    background: none;
+    border: 1px solid transparent;
+    color: #b00;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 1px 5px;
+    line-height: 1;
+    margin-left: 8px;
+    border-radius: 3px;
+    opacity: 0.5;
+    transition: opacity 0.15s, background-color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+}
+
+.dnnAttachmentPicker .attachment-item-remove:hover {
+    opacity: 1;
+    background: #fee;
+    border-color: #dcc;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .dnnAttachmentPicker .attachment-picker-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .dnnAttachmentPicker .attachment-dropzone {
+        max-width: none !important;
+        max-height: none !important;
+        min-height: 80px;
+    }
+
+    .dnnAttachmentPicker .attachment-file-list {
+        width: 100% !important;
+        float: none !important;
+    }
+}

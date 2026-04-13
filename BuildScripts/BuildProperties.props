@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <!-- DNN module build path. Override by setting DnnBinRoot in your environment or command line. -->
+    <DnnBinRoot Condition="'$(DnnBinRoot)' == ''">C:\DNN\mvc_test\bin\</DnnBinRoot>
+
+    <!-- If Visual Studio is installed, use its MSBuild WebApplication targets. -->
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">18.0</VisualStudioVersion>
+    <VisualStudioInstallationRoot Condition="'$(VisualStudioInstallationRoot)' == ''">C:\Program Files\Microsoft Visual Studio\18\Community\</VisualStudioInstallationRoot>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(VisualStudioInstallationRoot)MSBuild\Microsoft\VisualStudio\v$(VisualStudioVersion)\</VSToolsPath>
+  </PropertyGroup>
+</Project>
