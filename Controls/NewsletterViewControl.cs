@@ -19,6 +19,15 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Mime;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Web;
+using System.Web.Mvc;
 using Dnn.Modules.Newsletters.Components;
 using Dnn.Modules.Newsletters.Models;
 using DotNetNuke.Abstractions.Application;
@@ -36,15 +45,6 @@ using DotNetNuke.Web.MvcPipeline.ModuleControl;
 using DotNetNuke.Web.MvcPipeline.ModuleControl.Page;
 using DotNetNuke.Web.MvcPipeline.ModuleControl.Razor;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mime;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Web;
-using System.Web.Mvc;
 
 namespace Dnn.Modules.Newsletters.Controls
 {
@@ -76,7 +76,7 @@ namespace Dnn.Modules.Newsletters.Controls
                 {
                     MapRequestToModel(model);
 
-                    var command = Request.Form["command"];
+                    var command = Request.Unvalidated.Form["command"];
                     switch (command)
                     {
                         case "Preview":
@@ -119,35 +119,52 @@ namespace Dnn.Modules.Newsletters.Controls
                     {
                         Value = locale.Key,
                         Text = locale.Value.Text,
-                        Selected = selectedLanguages.Contains(locale.Key, StringComparer.OrdinalIgnoreCase)
+                        Selected = selectedLanguages.Contains(
+                            locale.Key,
+                            StringComparer.OrdinalIgnoreCase
+                        ),
                     })
-                    .ToList()
+                    .ToList(),
             };
         }
 
         private void MapRequestToModel(NewsletterViewModel model)
         {
-            model.Recipients = Request.Form["Recipients"] ?? string.Empty;
-            model.AdditionalEmails = Request.Form["AdditionalEmails"] ?? string.Empty;
-            model.Subject = Request.Form["Subject"] ?? string.Empty;
-            model.Message = Request.Form["Message"] ?? string.Empty;
-            model.From = Request.Form["From"] ?? string.Empty;
-            model.ReplyTo = Request.Form["ReplyTo"] ?? string.Empty;
-            model.AttachmentUrl = Request.Form["AttachmentUrl"] ?? string.Empty;
-            model.RelayAddress = Request.Form["RelayAddress"] ?? string.Empty;
-            model.Priority = Request.Form["Priority"] ?? "2";
-            model.SendMethod = Request.Form["SendMethod"] ?? "TO";
-            model.SendAction = Request.Form["SendAction"] ?? "A";
-            model.ReplaceTokens = !string.IsNullOrEmpty(Request.Form["ReplaceTokens"]);
-            model.IsHtmlMessage = !string.Equals(Request.Form["IsHtmlMessage"], "false", StringComparison.OrdinalIgnoreCase);
-            model.RelayAddressVisible = string.Equals(model.SendMethod, "RELAY", StringComparison.OrdinalIgnoreCase);
+            var form = Request.Unvalidated.Form;
+            model.Recipients = form["Recipients"] ?? string.Empty;
+            model.AdditionalEmails = form["AdditionalEmails"] ?? string.Empty;
+            model.Subject = form["Subject"] ?? string.Empty;
+            model.Message = form["Message"] ?? string.Empty;
+            model.From = form["From"] ?? string.Empty;
+            model.ReplyTo = form["ReplyTo"] ?? string.Empty;
+            model.AttachmentUrl = form["AttachmentUrl"] ?? string.Empty;
+            model.RelayAddress = form["RelayAddress"] ?? string.Empty;
+            model.Priority = form["Priority"] ?? "2";
+            model.SendMethod = form["SendMethod"] ?? "TO";
+            model.SendAction = form["SendAction"] ?? "A";
+            model.ReplaceTokens = !string.IsNullOrEmpty(form["ReplaceTokens"]);
+            model.IsHtmlMessage = !string.Equals(
+                form["IsHtmlMessage"],
+                "false",
+                StringComparison.OrdinalIgnoreCase
+            );
+            model.RelayAddressVisible = string.Equals(
+                model.SendMethod,
+                "RELAY",
+                StringComparison.OrdinalIgnoreCase
+            );
 
-            var selectedLanguages = Request.Form.GetValues("SelectedLanguages") ?? Array.Empty<string>();
-            model.SelectedLanguages = selectedLanguages.Where(value => !string.IsNullOrWhiteSpace(value)).ToList();
+            var selectedLanguages = form.GetValues("SelectedLanguages") ?? Array.Empty<string>();
+            model.SelectedLanguages = selectedLanguages
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .ToList();
 
             foreach (var language in model.AvailableLanguages)
             {
-                language.Selected = model.SelectedLanguages.Contains(language.Value, StringComparer.OrdinalIgnoreCase);
+                language.Selected = model.SelectedLanguages.Contains(
+                    language.Value,
+                    StringComparer.OrdinalIgnoreCase
+                );
             }
 
             model.AttachmentFileName = ResolveAttachmentFileName(model.AttachmentUrl);
@@ -205,14 +222,29 @@ namespace Dnn.Modules.Newsletters.Controls
             catch (Exception ex)
             {
                 Exceptions.LogException(ex);
-                SetStatus(model, Localization.GetString("NoMessagesSentPlusError", LocalResourceFile), "warning", ex.Message);
+                SetStatus(
+                    model,
+                    Localization.GetString("NoMessagesSentPlusError", LocalResourceFile),
+                    "warning",
+                    ex.Message
+                );
                 return View(model);
             }
         }
 
-        private void SendEmail(NewsletterViewModel model, List<string> roleNames, List<UserInfo> users)
+        private void SendEmail(
+            NewsletterViewModel model,
+            List<string> roleNames,
+            List<UserInfo> users
+        )
         {
-            var email = new SendTokenizedBulkEmail(roleNames, users, true, model.Subject, ConvertToAbsoluteUrls(model.Message));
+            var email = new SendTokenizedBulkEmail(
+                roleNames,
+                users,
+                true,
+                model.Subject,
+                ConvertToAbsoluteUrls(model.Message)
+            );
 
             try
             {
@@ -256,11 +288,22 @@ namespace Dnn.Modules.Newsletters.Controls
                     email.Priority = MailPriority.Low;
                     break;
                 default:
-                    SetStatus(model, Localization.GetString("MessageValidation", LocalResourceFile), "error");
+                    SetStatus(
+                        model,
+                        Localization.GetString("MessageValidation", LocalResourceFile),
+                        "error"
+                    );
                     return false;
             }
 
-            if (!string.IsNullOrWhiteSpace(model.From) && !string.Equals(email.SendingUser.Email, model.From, StringComparison.OrdinalIgnoreCase))
+            if (
+                !string.IsNullOrWhiteSpace(model.From)
+                && !string.Equals(
+                    email.SendingUser.Email,
+                    model.From,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
             {
                 var sendingUser = email.SendingUser ?? new UserInfo();
                 sendingUser.Email = model.From;
@@ -282,7 +325,12 @@ namespace Dnn.Modules.Newsletters.Controls
             {
                 email.AddAttachment(
                     _fileManager.GetFileContent(attachmentFile),
-                    new ContentType { MediaType = attachmentFile.ContentType, Name = attachmentFile.FileName });
+                    new ContentType
+                    {
+                        MediaType = attachmentFile.ContentType,
+                        Name = attachmentFile.FileName,
+                    }
+                );
             }
 
             switch (model.SendMethod)
@@ -297,14 +345,23 @@ namespace Dnn.Modules.Newsletters.Controls
                     email.AddressMethod = SendTokenizedBulkEmail.AddressMethods.Send_Relay;
                     if (string.IsNullOrWhiteSpace(model.RelayAddress))
                     {
-                        SetStatus(model, Localization.GetString("NoMessagesSent", LocalResourceFile), "warning", -1);
+                        SetStatus(
+                            model,
+                            Localization.GetString("NoMessagesSent", LocalResourceFile),
+                            "warning",
+                            -1
+                        );
                         return false;
                     }
 
                     email.RelayEmailAddress = model.RelayAddress;
                     break;
                 default:
-                    SetStatus(model, Localization.GetString("MessageValidation", LocalResourceFile), "error");
+                    SetStatus(
+                        model,
+                        Localization.GetString("MessageValidation", LocalResourceFile),
+                        "error"
+                    );
                     return false;
             }
 
@@ -317,26 +374,47 @@ namespace Dnn.Modules.Newsletters.Controls
             var mailsSent = email.SendMails();
             if (mailsSent > 0)
             {
-                SetStatus(model, Localization.GetString("MessagesSentCount", LocalResourceFile), "success", mailsSent);
+                SetStatus(
+                    model,
+                    Localization.GetString("MessagesSentCount", LocalResourceFile),
+                    "success",
+                    mailsSent
+                );
             }
             else
             {
-                SetStatus(model, Localization.GetString("NoMessagesSent", LocalResourceFile), "warning", email.SendingUser.Email);
+                SetStatus(
+                    model,
+                    Localization.GetString("NoMessagesSent", LocalResourceFile),
+                    "warning",
+                    email.SendingUser.Email
+                );
             }
         }
 
         private void SendMailAsynchronously(NewsletterViewModel model, SendTokenizedBulkEmail email)
         {
-            var startSubject = Localization.GetString("EMAIL_BulkMailStart_Subject.Text", Localization.GlobalResourceFile);
+            var startSubject = Localization.GetString(
+                "EMAIL_BulkMailStart_Subject.Text",
+                Localization.GlobalResourceFile
+            );
             if (!string.IsNullOrEmpty(startSubject))
             {
                 startSubject = string.Format(startSubject, model.Subject);
             }
 
-            var startBody = Localization.GetString("EMAIL_BulkMailStart_Body.Text", Localization.GlobalResourceFile);
+            var startBody = Localization.GetString(
+                "EMAIL_BulkMailStart_Body.Text",
+                Localization.GlobalResourceFile
+            );
             if (!string.IsNullOrEmpty(startBody))
             {
-                startBody = string.Format(startBody, model.Subject, CurrentUser.DisplayName, email.Recipients().Count);
+                startBody = string.Format(
+                    startBody,
+                    model.Subject,
+                    CurrentUser.DisplayName,
+                    email.Recipients().Count
+                );
             }
 
             var sendMailResult = Mail.SendMail(
@@ -354,17 +432,27 @@ namespace Dnn.Modules.Newsletters.Controls
                 _mailSettings.GetAuthentication(PortalId),
                 _mailSettings.GetUsername(PortalId),
                 _mailSettings.GetPassword(PortalId),
-                _mailSettings.GetSecureConnectionEnabled(PortalId));
+                _mailSettings.GetSecureConnectionEnabled(PortalId)
+            );
 
             if (string.IsNullOrEmpty(sendMailResult))
             {
                 var thread = new Thread(() => SendAndDispose(email));
                 thread.Start();
-                SetStatus(model, Localization.GetString("MessageSent", LocalResourceFile), "success");
+                SetStatus(
+                    model,
+                    Localization.GetString("MessageSent", LocalResourceFile),
+                    "success"
+                );
             }
             else
             {
-                SetStatus(model, Localization.GetString("NoMessagesSentPlusError", LocalResourceFile), "warning", sendMailResult);
+                SetStatus(
+                    model,
+                    Localization.GetString("NoMessagesSentPlusError", LocalResourceFile),
+                    "warning",
+                    sendMailResult
+                );
             }
         }
 
@@ -376,7 +464,11 @@ namespace Dnn.Modules.Newsletters.Controls
             }
         }
 
-        private bool ValidateReadyToSend(NewsletterViewModel model, List<string> roleNames, List<UserInfo> users)
+        private bool ValidateReadyToSend(
+            NewsletterViewModel model,
+            List<string> roleNames,
+            List<UserInfo> users
+        )
         {
             if (!ValidateCommonFields(model))
             {
@@ -385,13 +477,26 @@ namespace Dnn.Modules.Newsletters.Controls
 
             if (users.Count == 0 && roleNames.Count == 0)
             {
-                SetStatus(model, Localization.GetString("NoRecipients", LocalResourceFile), "warning", -1);
+                SetStatus(
+                    model,
+                    Localization.GetString("NoRecipients", LocalResourceFile),
+                    "warning",
+                    -1
+                );
                 return false;
             }
 
-            if (!IsValidEmailOrEmpty(model.From) || !IsValidEmailOrEmpty(model.ReplyTo) || !IsValidEmailOrEmpty(model.RelayAddress))
+            if (
+                !IsValidEmailOrEmpty(model.From)
+                || !IsValidEmailOrEmpty(model.ReplyTo)
+                || !IsValidEmailOrEmpty(model.RelayAddress)
+            )
             {
-                SetStatus(model, Localization.GetString("revEmailAddress.ErrorMessage", LocalResourceFile), "error");
+                SetStatus(
+                    model,
+                    Localization.GetString("revEmailAddress.ErrorMessage", LocalResourceFile),
+                    "error"
+                );
                 return false;
             }
 
@@ -400,9 +505,15 @@ namespace Dnn.Modules.Newsletters.Controls
 
         private bool ValidateCommonFields(NewsletterViewModel model)
         {
-            if (string.IsNullOrWhiteSpace(model.Subject) || string.IsNullOrWhiteSpace(model.Message))
+            if (
+                string.IsNullOrWhiteSpace(model.Subject) || string.IsNullOrWhiteSpace(model.Message)
+            )
             {
-                SetStatus(model, Localization.GetString("MessageValidation", LocalResourceFile), "warning");
+                SetStatus(
+                    model,
+                    Localization.GetString("MessageValidation", LocalResourceFile),
+                    "warning"
+                );
                 return false;
             }
 
@@ -419,33 +530,52 @@ namespace Dnn.Modules.Newsletters.Controls
             return Regex.IsMatch(value, @"^\w+([\-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$");
         }
 
-        private void GetRecipients(NewsletterViewModel model, out List<string> roleNames, out List<UserInfo> users)
+        private void GetRecipients(
+            NewsletterViewModel model,
+            out List<string> roleNames,
+            out List<UserInfo> users
+        )
         {
             roleNames = new List<string>();
             users = new List<UserInfo>();
 
             if (!string.IsNullOrWhiteSpace(model.AdditionalEmails))
             {
-                foreach (var email in model.AdditionalEmails.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (
+                    var email in model.AdditionalEmails.Split(
+                        new[] { ';' },
+                        StringSplitOptions.RemoveEmptyEntries
+                    )
+                )
                 {
                     var trimmedEmail = email.Trim();
                     if (!string.IsNullOrWhiteSpace(trimmedEmail))
                     {
-                        users.Add(new UserInfo
-                        {
-                            UserID = Null.NullInteger,
-                            Email = trimmedEmail,
-                            DisplayName = trimmedEmail
-                        });
+                        users.Add(
+                            new UserInfo
+                            {
+                                UserID = Null.NullInteger,
+                                Email = trimmedEmail,
+                                DisplayName = trimmedEmail,
+                            }
+                        );
                     }
                 }
             }
 
-            foreach (var value in (model.Recipients ?? string.Empty).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (
+                var value in (model.Recipients ?? string.Empty).Split(
+                    new[] { ',' },
+                    StringSplitOptions.RemoveEmptyEntries
+                )
+            )
             {
                 if (value.StartsWith("role-", StringComparison.OrdinalIgnoreCase))
                 {
-                    var role = RoleController.Instance.GetRoleById(PortalId, int.Parse(value.Substring(5)));
+                    var role = RoleController.Instance.GetRoleById(
+                        PortalId,
+                        int.Parse(value.Substring(5))
+                    );
                     if (role != null && !string.IsNullOrWhiteSpace(role.RoleName))
                     {
                         roleNames.Add(role.RoleName);
@@ -471,17 +601,31 @@ namespace Dnn.Modules.Newsletters.Controls
 
             foreach (var value in (Request.QueryString["users"] ?? string.Empty).Split(','))
             {
-                if (int.TryParse(value, out id) && (user = UserController.GetUserById(PortalId, id)) != null)
+                if (
+                    int.TryParse(value, out id)
+                    && (user = UserController.GetUserById(PortalId, id)) != null
+                )
                 {
-                    entities.AppendFormat(@"{{ ""id"": ""user-{0}"", ""name"": ""{1}"" }},", user.UserID, user.DisplayName.Replace("\"", string.Empty));
+                    entities.AppendFormat(
+                        @"{{ ""id"": ""user-{0}"", ""name"": ""{1}"" }},",
+                        user.UserID,
+                        user.DisplayName.Replace("\"", string.Empty)
+                    );
                 }
             }
 
             foreach (var value in (Request.QueryString["roles"] ?? string.Empty).Split(','))
             {
-                if (int.TryParse(value, out id) && (role = RoleController.Instance.GetRoleById(PortalId, id)) != null)
+                if (
+                    int.TryParse(value, out id)
+                    && (role = RoleController.Instance.GetRoleById(PortalId, id)) != null
+                )
                 {
-                    entities.AppendFormat(@"{{ ""id"": ""role-{0}"", ""name"": ""{1}"" }},", role.RoleID, role.RoleName.Replace("\"", string.Empty));
+                    entities.AppendFormat(
+                        @"{{ ""id"": ""role-{0}"", ""name"": ""{1}"" }},",
+                        role.RoleID,
+                        role.RoleName.Replace("\"", string.Empty)
+                    );
                 }
             }
 
@@ -501,7 +645,10 @@ namespace Dnn.Modules.Newsletters.Controls
 
         private IFileInfo ResolveAttachment(string attachmentValue)
         {
-            if (string.IsNullOrWhiteSpace(attachmentValue) || !attachmentValue.StartsWith("FileID=", StringComparison.OrdinalIgnoreCase))
+            if (
+                string.IsNullOrWhiteSpace(attachmentValue)
+                || !attachmentValue.StartsWith("FileID=", StringComparison.OrdinalIgnoreCase)
+            )
             {
                 return null;
             }
@@ -516,7 +663,8 @@ namespace Dnn.Modules.Newsletters.Controls
 
         private static string ConvertToAbsoluteUrls(string content)
         {
-            const string pattern = "<(a|link|img|script|object).[^>]*(href|src|action)=(\\\"|'|)(?<url>(.[^\\\"']*))(\\\"|'|)[^>]*>";
+            const string pattern =
+                "<(a|link|img|script|object).[^>]*(href|src|action)=(\\\"|'|)(?<url>(.[^\\\"']*))(\\\"|'|)[^>]*>";
             return Regex.Replace(content ?? string.Empty, pattern, FormatUrls);
         }
 
@@ -527,17 +675,33 @@ namespace Dnn.Modules.Newsletters.Controls
 
             if (url.StartsWith("/"))
             {
-                return originalValue.Replace(url, Globals.AddHTTP(System.Web.HttpContext.Current.Request.Url.Host) + url);
+                return originalValue.Replace(
+                    url,
+                    Globals.AddHTTP(System.Web.HttpContext.Current.Request.Url.Host) + url
+                );
             }
 
             return url.Contains("://") || url.Contains("mailto:")
                 ? originalValue
-                : originalValue.Replace(url, Globals.AddHTTP(System.Web.HttpContext.Current.Request.Url.Host) + Globals.ApplicationPath + "/" + url);
+                : originalValue.Replace(
+                    url,
+                    Globals.AddHTTP(System.Web.HttpContext.Current.Request.Url.Host)
+                        + Globals.ApplicationPath
+                        + "/"
+                        + url
+                );
         }
 
-        private static void SetStatus(NewsletterViewModel model, string format, string statusType, params object[] args)
+        private static void SetStatus(
+            NewsletterViewModel model,
+            string format,
+            string statusType,
+            params object[] args
+        )
         {
-            model.StatusMessage = string.IsNullOrEmpty(format) ? string.Empty : string.Format(format, args);
+            model.StatusMessage = string.IsNullOrEmpty(format)
+                ? string.Empty
+                : string.Format(format, args);
             model.StatusCssClass = "dnnFormMessage " + GetStatusCssClass(statusType);
         }
 
@@ -571,8 +735,10 @@ namespace Dnn.Modules.Newsletters.Controls
             //    .Register();
 
             // Register JavaScript files
-            context.ClientResourceController
-                .CreateScript("~/DesktopModules/Admin/Newsletters/js/edit.js")
+            context
+                .ClientResourceController.CreateScript(
+                    "~/DesktopModules/Admin/Newsletters/js/edit.js"
+                )
                 .Register();
 
             // Set page title
