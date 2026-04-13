@@ -57,15 +57,20 @@ namespace Dnn.Modules.Newsletters.Controls
     {
         private readonly IMailSettings _mailSettings;
         private readonly IFileManager _fileManager;
+        private readonly IHostSettings _hostSettings;
 
         private UserInfo CurrentUser => UserController.Instance.GetCurrentUserInfo();
 
+        /// <summary>Initializes a new instance of the <see cref="NewsletterViewControl"/> class.</summary>
         public NewsletterViewControl()
         {
             _mailSettings = DependencyProvider.GetRequiredService<IMailSettings>();
             _fileManager = DependencyProvider.GetRequiredService<IFileManager>();
+            _hostSettings = DependencyProvider.GetRequiredService<IHostSettings>();
         }
 
+        /// <summary>Invokes the newsletter view control and returns the Razor module result.</summary>
+        /// <returns>An <see cref="IRazorModuleResult"/> representing the rendered view.</returns>
         public override IRazorModuleResult Invoke()
         {
             try
@@ -453,7 +458,7 @@ namespace Dnn.Modules.Newsletters.Controls
                 }
                 else if (value.StartsWith("user-", StringComparison.OrdinalIgnoreCase))
                 {
-                    var user = UserController.GetUserById(PortalId, int.Parse(value.Substring(5)));
+                    var user = UserController.GetUserById(_hostSettings, PortalId, int.Parse(value.Substring(5)));
                     if (user != null)
                     {
                         users.Add(user);
@@ -471,7 +476,7 @@ namespace Dnn.Modules.Newsletters.Controls
 
             foreach (var value in (Request.QueryString["users"] ?? string.Empty).Split(','))
             {
-                if (int.TryParse(value, out id) && (user = UserController.GetUserById(PortalId, id)) != null)
+                if (int.TryParse(value, out id) && (user = UserController.GetUserById(_hostSettings, PortalId, id)) != null)
                 {
                     entities.AppendFormat(@"{{ ""id"": ""user-{0}"", ""name"": ""{1}"" }},", user.UserID, user.DisplayName.Replace("\"", string.Empty));
                 }

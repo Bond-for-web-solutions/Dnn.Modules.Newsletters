@@ -32,12 +32,16 @@ namespace Dnn.Modules.Newsletters.Models
     /// attachments, and various sending options such as priority and delivery method.</remarks>
     public class NewsletterViewModel
     {
+        /// <summary>Represents a language selection option for the newsletter.</summary>
         public class LanguageOption
         {
+            /// <summary>Gets or sets the language code value.</summary>
             public string Value { get; set; }
 
+            /// <summary>Gets or sets the display text for the language.</summary>
             public string Text { get; set; }
 
+            /// <summary>Gets or sets a value indicating whether this language is selected.</summary>
             public bool Selected { get; set; }
         }
 

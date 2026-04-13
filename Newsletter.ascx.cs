@@ -1,6 +1,6 @@
 #region Copyright
 // 
-// DotNetNuke® - http://www.dnnsoftware.com
+// DotNetNukeï¿½ - http://www.dnnsoftware.com
 // Copyright (c) 2002-2015
 // by DNN Corp.
 // 
@@ -46,6 +46,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Net.Mime;
 using DotNetNuke.Abstractions.Application;
+using DotNetNuke.Abstractions.Logging;
 
 #endregion
 
@@ -62,6 +63,9 @@ namespace Dnn.Modules.Newsletters
     public partial class Newsletter : PortalModuleBase
     {
         private readonly IMailSettings _mailSettings;
+        private readonly IHostSettings _hostSettings;
+        private readonly IApplicationStatusInfo _appStatus;
+        private readonly IEventLogger _eventLogger;
 
         /// <summary>
         /// Initializes a new instance of the Newsletter class using the configured mail settings.
@@ -72,6 +76,9 @@ namespace Dnn.Modules.Newsletters
         public Newsletter()
         {
             _mailSettings = DependencyProvider.GetRequiredService<IMailSettings>();
+            _hostSettings = DependencyProvider.GetRequiredService<IHostSettings>();
+            _appStatus = DependencyProvider.GetRequiredService<IApplicationStatusInfo>();
+            _eventLogger = DependencyProvider.GetRequiredService<IEventLogger>();
         }
 
         #region Private Methods
@@ -111,7 +118,7 @@ namespace Dnn.Modules.Newsletters
             var entities = new StringBuilder("[");
 
             foreach (var value in (Request.QueryString["users"] ?? string.Empty).Split(','))
-                if (int.TryParse(value, out id) && (user = UserController.GetUserById(PortalId, id)) != null)
+                if (int.TryParse(value, out id) && (user = UserController.GetUserById(_hostSettings, PortalId, id)) != null)
                     entities.AppendFormat(@"{{ id: ""user-{0}"", name: ""{1}"" }},", user.UserID, user.DisplayName.Replace("\"", ""));
             foreach (var value in (Request.QueryString["roles"] ?? string.Empty).Split(','))
                 if (int.TryParse(value, out id) && (role = RoleController.Instance.GetRoleById(PortalId, id)) != null)
@@ -137,7 +144,7 @@ namespace Dnn.Modules.Newsletters
 
             ServicesFramework.Instance.RequestAjaxScriptSupport();
             ServicesFramework.Instance.RequestAjaxAntiForgerySupport();
-            JavaScript.RequestRegistration(CommonJs.DnnPlugins);
+            JavaScript.RequestRegistration(_appStatus, _eventLogger, PortalSettings, CommonJs.DnnPlugins);
 
             try
             {
@@ -414,7 +421,7 @@ namespace Dnn.Modules.Newsletters
             }
 
             objRoleNames.AddRange(recipients.Value.Split(',').Where(value => value.StartsWith("role-")).Select(value => RoleController.Instance.GetRoleById(PortalId, int.Parse(value.Substring(5))).RoleName).Where(roleName => !string.IsNullOrWhiteSpace(roleName)));
-            objUsers.AddRange(recipients.Value.Split(',').Where(value => value.StartsWith("user-")).Select(value => UserController.GetUserById(PortalId, int.Parse(value.Substring(5)))).Where(user => user != null));
+            objUsers.AddRange(recipients.Value.Split(',').Where(value => value.StartsWith("user-")).Select(value => UserController.GetUserById(_hostSettings, PortalId, int.Parse(value.Substring(5)))).Where(user => user != null));
         }
 
         /// <summary>

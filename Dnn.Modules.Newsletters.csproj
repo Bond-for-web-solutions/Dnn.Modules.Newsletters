@@ -34,8 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>2</WarningLevel>
     <DocumentationFile>..\..\..\bin\Dnn.Modules.Newsletters.XML</DocumentationFile>
-    <NoWarn>
-    </NoWarn>
+    <NoWarn>MSB3247</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -45,6 +44,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Dnn.Modules.Newsletters.XML</DocumentationFile>
+    <NoWarn>MSB3247</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Components\NewsletterController.cs" />
