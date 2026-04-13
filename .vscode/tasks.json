@@ -5,10 +5,7 @@
       "label": "Build DNN Newsletters",
       "type": "shell",
       "command": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
-      "args": [
-        "Dnn.Modules.Newsletters.sln",
-        "/p:Configuration=Release"
-      ],
+      "args": ["Dnn.Modules.Newsletters.sln", "-p:Configuration=Release"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -19,9 +16,7 @@
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": [
-        "$msCompile"
-      ]
+      "problemMatcher": ["$msCompile"]
     }
   ]
 }
