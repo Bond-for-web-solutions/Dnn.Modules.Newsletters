@@ -48,6 +48,9 @@ namespace Dnn.Modules.Newsletters.Models
         /// <summary>Gets or sets the resolved file name for display.</summary>
         public string SelectedFileName { get; set; }
 
+        /// <summary>Gets or sets the files selected as attachments.</summary>
+        public List<FileOption> SelectedAttachments { get; set; } = new List<FileOption>();
+
         /// <summary>Gets or sets the label text for the control.</summary>
         public string Label { get; set; } = "Attachment";
 

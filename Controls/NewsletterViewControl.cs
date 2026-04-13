@@ -81,7 +81,7 @@ namespace Dnn.Modules.Newsletters.Controls
                 {
                     MapRequestToModel(model);
 
-                    var command = Request.Form["command"];
+                    var command = Request.Unvalidated.Form["command"];
                     switch (command)
                     {
                         case "Preview":
@@ -143,49 +143,62 @@ namespace Dnn.Modules.Newsletters.Controls
 
         private void MapRequestToModel(NewsletterViewModel model)
         {
-            model.Recipients = Request.Form["Recipients"] ?? string.Empty;
-            model.AdditionalEmails = Request.Form["AdditionalEmails"] ?? string.Empty;
-            model.Subject = Request.Form["Subject"] ?? string.Empty;
-            model.Message = Request.Form["Message"] ?? string.Empty;
-            model.From = Request.Form["From"] ?? string.Empty;
-            model.ReplyTo = Request.Form["ReplyTo"] ?? string.Empty;
-            model.RelayAddress = Request.Form["RelayAddress"] ?? string.Empty;
-            model.Priority = Request.Form["Priority"] ?? "2";
-            model.SendMethod = Request.Form["SendMethod"] ?? "TO";
-            model.SendAction = Request.Form["SendAction"] ?? "A";
-            model.ReplaceTokens = !string.IsNullOrEmpty(Request.Form["ReplaceTokens"]);
-            model.IsHtmlMessage = !string.Equals(Request.Form["IsHtmlMessage"], "false", StringComparison.OrdinalIgnoreCase);
+            var form = Request.Unvalidated.Form;
+            model.Recipients = form["Recipients"] ?? string.Empty;
+            model.AdditionalEmails = form["AdditionalEmails"] ?? string.Empty;
+            model.Subject = form["Subject"] ?? string.Empty;
+            model.Message = form["Message"] ?? string.Empty;
+            model.From = form["From"] ?? string.Empty;
+            model.ReplyTo = form["ReplyTo"] ?? string.Empty;
+            model.RelayAddress = form["RelayAddress"] ?? string.Empty;
+            model.Priority = form["Priority"] ?? "2";
+            model.SendMethod = form["SendMethod"] ?? "TO";
+            model.SendAction = form["SendAction"] ?? "A";
+            model.ReplaceTokens = !string.IsNullOrEmpty(form["ReplaceTokens"]);
+            model.IsHtmlMessage = !string.Equals(form["IsHtmlMessage"], "false", StringComparison.OrdinalIgnoreCase);
             model.RelayAddressVisible = string.Equals(model.SendMethod, "RELAY", StringComparison.OrdinalIgnoreCase);
 
             // Attachment folder/file picker
             model.Attachment.ModuleId = ModuleId;
-            if (int.TryParse(Request.Form["AttachmentFolderId"], out var folderId))
+            if (int.TryParse(form["AttachmentFolderId"], out var folderId))
             {
                 model.Attachment.SelectedFolderId = folderId;
-            }
-
-            if (int.TryParse(Request.Form["AttachmentFileId"], out var fileId) && fileId > 0)
-            {
-                model.Attachment.SelectedFileId = fileId;
-                model.AttachmentUrl = "FileID=" + fileId;
-            }
-            else
-            {
-                model.AttachmentUrl = string.Empty;
             }
 
             model.Attachment.Folders = GetPortalFolders();
             model.Attachment.Files = GetFilesInFolder(model.Attachment.SelectedFolderId);
 
-            var selectedLanguages = Request.Form.GetValues("SelectedLanguages") ?? Array.Empty<string>();
+            // Read existing attachment file IDs from hidden inputs
+            var existingFileIds = form.GetValues("AttachmentFileIds");
+            if (existingFileIds != null)
+            {
+                foreach (var idStr in existingFileIds)
+                {
+                    if (int.TryParse(idStr, out var afid) && afid > 0)
+                    {
+                        var existingFile = _fileManager.GetFile(afid);
+                        if (existingFile != null)
+                        {
+                            model.Attachment.SelectedAttachments.Add(new AttachmentPickerModel.FileOption
+                            {
+                                FileId = existingFile.FileId,
+                                FileName = existingFile.FileName
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Process newly uploaded files from the drop zone
+            ProcessFileUploads(model);
+
+            var selectedLanguages = form.GetValues("SelectedLanguages") ?? Array.Empty<string>();
             model.SelectedLanguages = selectedLanguages.Where(value => !string.IsNullOrWhiteSpace(value)).ToList();
 
             foreach (var language in model.AvailableLanguages)
             {
                 language.Selected = model.SelectedLanguages.Contains(language.Value, StringComparer.OrdinalIgnoreCase);
             }
-
-            model.Attachment.SelectedFileName = ResolveAttachmentFileName(model.AttachmentUrl);
         }
 
         private List<AttachmentPickerModel.FolderOption> GetPortalFolders()
@@ -277,48 +290,54 @@ namespace Dnn.Modules.Newsletters.Controls
 
         private IRazorModuleResult HandleUpload(NewsletterViewModel model)
         {
-            try
+            // File uploads are now processed in MapRequestToModel via ProcessFileUploads
+            if (model.Attachment.SelectedAttachments.Count > 0)
             {
-                var httpRequest = System.Web.HttpContext.Current.Request;
-                HttpPostedFile uploadedFile = null;
-
-                if (httpRequest.Files.Count > 0)
-                {
-                    uploadedFile = httpRequest.Files["UploadFile"] ?? httpRequest.Files[0];
-                }
-
-                if (uploadedFile == null || uploadedFile.ContentLength == 0)
-                {
-                    SetStatus(model, "Please select a file to upload.", "warning");
-                    return View(model);
-                }
-                var folder = FolderManager.Instance.GetFolder(model.Attachment.SelectedFolderId);
-                if (folder == null)
-                {
-                    SetStatus(model, "Selected folder not found.", "error");
-                    return View(model);
-                }
-
-                var fileName = System.IO.Path.GetFileName(uploadedFile.FileName);
-                var file = _fileManager.AddFile(folder, fileName, uploadedFile.InputStream, true);
-
-                // Select the newly uploaded file
-                model.Attachment.SelectedFileId = file.FileId;
-                model.AttachmentUrl = "FileID=" + file.FileId;
-                model.Attachment.SelectedFileName = file.FileName;
-
-                // Refresh the file list for the current folder
-                model.Attachment.Files = GetFilesInFolder(model.Attachment.SelectedFolderId);
-
-                SetStatus(model, "File '" + fileName + "' uploaded successfully.", "success");
-            }
-            catch (Exception ex)
-            {
-                Exceptions.LogException(ex);
-                SetStatus(model, "Upload failed: " + ex.Message, "error");
+                SetStatus(model, string.Format("{0} file(s) attached.", model.Attachment.SelectedAttachments.Count), "success");
             }
 
             return View(model);
+        }
+
+        private void ProcessFileUploads(NewsletterViewModel model)
+        {
+            var httpRequest = System.Web.HttpContext.Current.Request;
+            if (httpRequest.Files.Count == 0)
+            {
+                return;
+            }
+
+            var folder = FolderManager.Instance.GetFolder(model.Attachment.SelectedFolderId);
+            if (folder == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < httpRequest.Files.Count; i++)
+            {
+                var uploaded = httpRequest.Files[i];
+                if (uploaded == null || uploaded.ContentLength == 0)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var fileName = System.IO.Path.GetFileName(uploaded.FileName);
+                    var file = _fileManager.AddFile(folder, fileName, uploaded.InputStream, true);
+                    model.Attachment.SelectedAttachments.Add(new AttachmentPickerModel.FileOption
+                    {
+                        FileId = file.FileId,
+                        FileName = file.FileName
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Exceptions.LogException(ex);
+                }
+            }
+
+            model.Attachment.Files = GetFilesInFolder(model.Attachment.SelectedFolderId);
         }
 
         private void SendEmail(NewsletterViewModel model, List<string> roleNames, List<UserInfo> users)
@@ -388,12 +407,15 @@ namespace Dnn.Modules.Newsletters.Controls
                 email.LanguageFilter = model.SelectedLanguages.ToArray();
             }
 
-            var attachmentFile = ResolveAttachment(model.AttachmentUrl);
-            if (attachmentFile != null)
+            foreach (var att in model.Attachment.SelectedAttachments)
             {
-                email.AddAttachment(
-                    _fileManager.GetFileContent(attachmentFile),
-                    new ContentType { MediaType = attachmentFile.ContentType, Name = attachmentFile.FileName });
+                var attachmentFile = _fileManager.GetFile(att.FileId);
+                if (attachmentFile != null)
+                {
+                    email.AddAttachment(
+                        _fileManager.GetFileContent(attachmentFile),
+                        new ContentType { MediaType = attachmentFile.ContentType, Name = attachmentFile.FileName });
+                }
             }
 
             switch (model.SendMethod)
@@ -683,7 +705,19 @@ namespace Dnn.Modules.Newsletters.Controls
 
             // Register JavaScript files
             context.ClientResourceController
-                .CreateScript("~/DesktopModules/Admin/Newsletters/js/edit.js")
+                .CreateStylesheet("~/DesktopModules/Admin/Newsletters/Resources/css/module.css")
+                .Register();
+
+            context.ClientResourceController
+                .CreateStylesheet("~/DesktopModules/Admin/Newsletters/Resources/css/attachment-picker.css")
+                .Register();
+
+            context.ClientResourceController
+                .CreateScript("~/DesktopModules/Admin/Newsletters/Resources/js/edit.js")
+                .Register();
+
+            context.ClientResourceController
+                .CreateScript("~/DesktopModules/Admin/Newsletters/Resources/js/attachment-picker.js")
                 .Register();
 
             // Set page title

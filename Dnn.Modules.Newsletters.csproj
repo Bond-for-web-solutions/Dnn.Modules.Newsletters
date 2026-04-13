@@ -64,9 +64,11 @@
     <Content Include="08.00.00.txt" />
     <Content Include="App_LocalResources\Newsletter.ascx.nl-NL.resx" />
     <Content Include="App_LocalResources\Newsletter.ascx.resx" />
-    <Content Include="js\edit.js" />
+    <Content Include="Resources\js\edit.js" />
+    <Content Include="Resources\js\attachment-picker.js" />
     <Content Include="license.txt" />
-    <Content Include="module.css" />
+    <Content Include="Resources\css\module.css" />
+    <Content Include="Resources\css\attachment-picker.css" />
     <Content Include="Newsletter.ascx" />
     <Content Include="ReleaseNotes.txt" />
     <Content Include="Views\web.config" />

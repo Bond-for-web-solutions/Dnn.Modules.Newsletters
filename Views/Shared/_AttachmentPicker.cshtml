@@ -5,75 +5,61 @@
     var prefix = Model.IdPrefix ?? "Attachment";
     var folderSelectId = prefix + "_FolderId";
     var fileSelectId = prefix + "_FileId";
-    var uploadInputId = prefix + "_UploadFile";
+    var uploadInputId = prefix + "_UploadFiles";
+    var dropzoneId = prefix + "_Dropzone";
+    var fileListId = prefix + "_FileList";
+    var addBtnId = prefix + "_AddBtn";
 }
 
+<link rel="stylesheet" href="/DesktopModules/Admin/Newsletters/Resources/css/attachment-picker.css" />
+<script src="/DesktopModules/Admin/Newsletters/Resources/js/attachment-picker.js"></script>
+
 <div class="dnnFormItem dnnAttachmentPicker" data-moduleid="@Model.ModuleId" data-prefix="@prefix">
+    <input type="file" id="@uploadInputId" name="UploadFiles" multiple class="attachment-hidden-input" />
     <div class="dnnLabel" style="position:relative">
-        <label for="@fileSelectId">@Model.Label</label>
+        <label>@Model.Label</label>
     </div>
-    <div class="dnnLeft">
-        <div style="margin-bottom:5px;">
-            <label style="display:inline-block;width:50px;">Folder:</label>
-            <select id="@folderSelectId" name="AttachmentFolderId">
-                @foreach (var folder in Model.Folders)
-                {
-                    <option value="@folder.FolderId" @(folder.FolderId == Model.SelectedFolderId ? "selected=\"selected\"" : "")>@folder.DisplayName</option>
-                }
-            </select>
+    <div class="attachment-picker-content">
+        <div class="attachment-picker-grid">
+            <div class="attachment-picker-left">
+                <div class="attachment-picker-row">
+                    <label class="picker-label" for="@folderSelectId">Folder:</label>
+                    <select id="@folderSelectId" name="AttachmentFolderId">
+                        @foreach (var folder in Model.Folders)
+                        {
+                            <option value="@folder.FolderId" @(folder.FolderId == Model.SelectedFolderId ? "selected=\"selected\"" : "")>@folder.DisplayName</option>
+                        }
+                    </select>
+                </div>
+                <div class="attachment-picker-row">
+                    <label class="picker-label" for="@fileSelectId">File:</label>
+                    <select id="@fileSelectId">
+                        <option value="">&lt;None Specified&gt;</option>
+                        @foreach (var file in Model.Files)
+                        {
+                            <option value="@file.FileId">@file.FileName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="attachment-dropzone" id="@dropzoneId">
+                <div class="dropzone-content">
+                    <p>Drop file(s) here</p>
+                    <p>or <a href="javascript:void(0)" class="dropzone-browse">browse</a></p>
+                </div>
+            </div>
         </div>
-        <div>
-            <label style="display:inline-block;width:50px;">File:</label>
-            <select id="@fileSelectId" name="AttachmentFileId">
-                <option value="">&lt;None Specified&gt;</option>
-                @foreach (var file in Model.Files)
-                {
-                    <option value="@file.FileId" @(file.FileId == Model.SelectedFileId ? "selected=\"selected\"" : "")>@file.FileName</option>
-                }
-            </select>
-        </div>
-        <div style="margin-top:8px;">
-            <input type="file" id="@uploadInputId" name="UploadFile" />
-            <button type="submit" name="command" value="@Model.UploadCommand" class="dnnSecondaryAction" style="margin-left:5px;">Upload File</button>
+        <div class="attachment-file-list" id="@fileListId">
+            @foreach (var att in Model.SelectedAttachments)
+            {
+                <div class="attachment-item" data-file-id="@att.FileId">
+                    <input type="hidden" name="AttachmentFileIds" value="@att.FileId" />
+                    <span class="attachment-item-icon">&#128196;</span>
+                    <span class="attachment-item-name">@att.FileName</span>
+                    <button type="button" class="attachment-item-remove" title="Remove">&times;</button>
+                </div>
+            }
         </div>
     </div>
 </div>
-
-<script type="text/javascript">
-    (function ($) {
-        var mid = @Model.ModuleId;
-        var folderSelectId = '@folderSelectId';
-        var fileSelectId = '@fileSelectId';
-
-        function loadFiles(folderId) {
-            var sf = $.ServicesFramework(mid);
-            $.ajax({
-                type: 'POST',
-                url: sf.getServiceRoot('InternalServices') + 'FileUpload/LoadFiles',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify({ FolderId: parseInt(folderId), FileFilter: '', Required: true }),
-                beforeSend: sf.setModuleHeaders,
-                success: function (data) {
-                    var $fileSelect = $('#' + fileSelectId);
-                    $fileSelect.empty().append('<option value="">&lt;None Specified&gt;</option>');
-                    if (data) {
-                        $.each(data, function (i, item) {
-                            $fileSelect.append($('<option></option>').val(item.Value).text(item.Text));
-                        });
-                    }
-                }
-            });
-        }
-
-        $(function () {
-            var $form = $('.dnnAttachmentPicker').closest('form');
-            $form.attr('enctype', 'multipart/form-data').attr('encoding', 'multipart/form-data');
-            $('form#Form').attr('enctype', 'multipart/form-data').attr('encoding', 'multipart/form-data');
-
-            $('#' + folderSelectId).on('change', function () {
-                loadFiles($(this).val());
-            });
-        });
-    }(jQuery));
-</script>
 

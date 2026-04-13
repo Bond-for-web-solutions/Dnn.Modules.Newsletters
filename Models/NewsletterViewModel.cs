@@ -92,10 +92,6 @@ namespace Dnn.Modules.Newsletters.Models
         /// </summary>
         public string Message { get; set; }
         /// <summary>
-        /// Gets or sets the URL of the attachment associated with this item.
-        /// </summary>
-        public string AttachmentUrl { get; set; }
-        /// <summary>
         /// Gets or sets the attachment picker model for folder/file selection and upload.
         /// </summary>
         public AttachmentPickerModel Attachment { get; set; } = new AttachmentPickerModel();
