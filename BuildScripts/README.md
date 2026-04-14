@@ -16,7 +16,7 @@ Edit `BuildProperties.props` to match your local environment:
 
 ```xml
 <!-- Path to your DNN installation's bin folder -->
-<DnnBinRoot>C:\DNN\mvc_test\bin\</DnnBinRoot>
+<DnnBinRoot>C:\DNN\<Project.Name>\bin\</DnnBinRoot>
 
 <!-- Visual Studio version and install path -->
 <VisualStudioVersion>18.0</VisualStudioVersion>
@@ -31,7 +31,7 @@ Press `Ctrl+Shift+B` to run the default build task. This is configured in `.vsco
 
 ### Visual Studio
 
-Open `Dnn.Modules.Newsletters.sln` and build with `Ctrl+Shift+B` or **Build > Build Solution**.
+Open `<Project.Name>.sln` and build with `Ctrl+Shift+B` or **Build > Build Solution**.
 
 ### Command Line
 
@@ -43,7 +43,7 @@ Open `Dnn.Modules.Newsletters.sln` and build with `Ctrl+Shift+B` or **Build > Bu
 
 When building in **Release** mode, the `ModulePackage.targets` automatically creates two DNN install packages in the `install/` folder:
 
-- `dnn_Newsletters_<version>_Install.zip` — Install package (views, CSS, JS, resources, DLL, SQL providers, manifest)
-- `dnn_Newsletters_<version>_Source.zip` — Source package (everything above plus source code, csproj, sln)
+- `<Project.Name>_<version>_Install.zip` — Install package (views, CSS, JS, resources, DLL, SQL providers, manifest)
+- `<Project.Name>_<version>_Source.zip` — Source package (everything above plus source code, csproj, sln)
 
 These zip files can be installed via the DNN **Extensions > Install Extension** page.
