@@ -161,7 +161,7 @@
   </ProjectExtensions>
   <PropertyGroup>
     <Extension>zip</Extension>
-    <DNNFileName>dnn_Newsletters</DNNFileName>
+    <DNNFileName>manifest</DNNFileName>
     <PackageName>dnn_Newsletters</PackageName>
     <MSBuildCommunityTasksPath>$(SolutionDir)\packages\MSBuildTasks.1.5.0.235\tools</MSBuildCommunityTasksPath>
   </PropertyGroup>
