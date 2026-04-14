@@ -36,21 +36,7 @@ BuildScripts/          MSBuild packaging targets
 
 ## Build
 
-- **VS Code**: Press `Ctrl+Shift+B`
-- **Visual Studio**: Open `Dnn.Modules.Newsletters.sln` and build with `Ctrl+Shift+B` or `Build > Build Solution`
-- **Command line**:
-
-```powershell
-& "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" Dnn.Modules.Newsletters.sln -p:Configuration=Release
-```
-
-### DNN Bin Root
-
-The project references DNN assemblies from a local DNN installation. Update `BuildScripts/BuildProperties.props` to point to your DNN `bin` folder:
-
-```xml
-<DnnBinRoot Condition="'$(DnnBinRoot)' == ''">C:\DNN\mvc_test\bin\</DnnBinRoot>
-```
+See [BuildScripts/README.md](BuildScripts/README.md) for build instructions and configuration.
 
 ## Test Mail Server
 
