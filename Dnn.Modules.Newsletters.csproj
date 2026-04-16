@@ -48,8 +48,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Components\NewsletterController.cs" />
+    <Compile Include="Components\ServiceRouteMapper.cs" />
+    <Compile Include="Controllers\NewsletterApiController.cs" />
     <Compile Include="Controls\NewsletterViewControl.cs" />
     <Compile Include="Models\AttachmentPickerModel.cs" />
+    <Compile Include="Models\NewsletterFormDto.cs" />
     <Compile Include="Models\NewsletterViewModel.cs" />
     <Compile Include="Newsletter.ascx.designer.cs">
       <DependentUpon>Newsletter.ascx</DependentUpon>
@@ -66,6 +69,7 @@
     <Content Include="App_LocalResources\Newsletter.ascx.resx" />
     <Content Include="Resources\js\edit.js" />
     <Content Include="Resources\js\attachment-picker.js" />
+    <Content Include="Resources\js\newsletter.js" />
     <Content Include="license.txt" />
     <Content Include="Resources\css\module.css" />
     <Content Include="Resources\css\attachment-picker.css" />
@@ -125,11 +129,18 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Http">
+      <HintPath>$(DnnBinRoot)System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.Formatting">
+      <HintPath>$(DnnBinRoot)System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web.Mvc, Version=5.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>$(DnnBinRoot)System.Web.Mvc.dll</HintPath>
     </Reference>
