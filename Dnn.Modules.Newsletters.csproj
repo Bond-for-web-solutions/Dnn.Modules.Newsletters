@@ -47,7 +47,9 @@
     <NoWarn>MSB3247</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Components\Constants.cs" />
     <Compile Include="Components\NewsletterController.cs" />
+    <Compile Include="Components\NewsletterMailHelper.cs" />
     <Compile Include="Components\ServiceRouteMapper.cs" />
     <Compile Include="Controllers\NewsletterApiController.cs" />
     <Compile Include="Controls\NewsletterViewControl.cs" />

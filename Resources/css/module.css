@@ -95,3 +95,43 @@ span.dnnNewsletterRadios label {
 .dnnActions {
     padding-inline-start: 0;
 }
+
+/* Required-field indicator (paired with aria-required for screen readers). */
+.dnnNewsletters .required-marker {
+    color: #c00;
+    margin-left: 2px;
+    font-weight: bold;
+}
+
+/* In-flight spinner shown next to Send / Preview while a request is running. */
+.dnnNewsletters .newsletter-spinner {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 8px;
+}
+.dnnNewsletters .newsletter-spinner[hidden] {
+    display: none;
+}
+.dnnNewsletters .newsletter-spinner-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ccc;
+    border-top-color: #1976d2;
+    border-radius: 50%;
+    animation: dnn-newsletter-spin 0.8s linear infinite;
+}
+@keyframes dnn-newsletter-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Visible focus indicator for keyboard users (WCAG 2.4.7). */
+.dnnNewsletters button:focus,
+.dnnNewsletters a.dnnPrimaryAction:focus,
+.dnnNewsletters a.dnnSecondaryAction:focus,
+.dnnNewsletters input:focus,
+.dnnNewsletters select:focus,
+.dnnNewsletters textarea:focus {
+    outline: 2px solid #1976d2;
+    outline-offset: 1px;
+}

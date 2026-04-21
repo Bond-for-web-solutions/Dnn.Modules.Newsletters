@@ -284,4 +284,10 @@
   <data name="Searching.Text" xml:space="preserve">
     <value>Searching...</value>
   </data>
+  <data name="ConfirmSend.Text" xml:space="preserve">
+    <value>Send this newsletter to {0} recipient group(s) and {1} additional email address(es)? This action cannot be undone.</value>
+  </data>
+  <data name="ConfirmNoRecipients.Text" xml:space="preserve">
+    <value>No recipients are currently selected. Send the newsletter anyway?</value>
+  </data>
 </root>

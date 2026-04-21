@@ -22,6 +22,7 @@
 using System;
 using DotNetNuke.Entities.Modules;
 using DotNetNuke.Entities.Modules.Definitions;
+using DotNetNuke.Services.Exceptions;
 using DotNetNuke.Services.Upgrade;
 
 namespace Dnn.Modules.Newsletters.Components
@@ -61,8 +62,10 @@ namespace Dnn.Modules.Newsletters.Components
                 }
                 return "Success";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                // DNN upgrade contract: return "Failed" rather than throwing, but never silently swallow.
+                Exceptions.LogException(ex);
                 return "Failed";
             }
         }

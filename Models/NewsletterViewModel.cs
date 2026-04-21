@@ -103,11 +103,11 @@ namespace Dnn.Modules.Newsletters.Models
         /// <summary>
         /// Gets or sets the priority level associated with the item.
         /// </summary>
-        public string Priority { get; set; } = "2";
+        public string Priority { get; set; } = Components.Constants.Priority.Normal;
         /// <summary>
         /// Gets or sets the method used to send the message.
         /// </summary>
-        public string SendMethod { get; set; } = "TO";
+        public string SendMethod { get; set; } = Components.Constants.SendMethod.To;
         /// <summary>
         /// Gets or sets a value indicating whether the relay address is visible to clients.
         /// </summary>
@@ -119,7 +119,7 @@ namespace Dnn.Modules.Newsletters.Models
         /// <summary>
         /// Gets or sets the action code to be sent with the request.
         /// </summary>
-        public string SendAction { get; set; } = "A";
+        public string SendAction { get; set; } = Components.Constants.SendAction.Asynchronous;
         /// <summary>
         /// Gets or sets a value indicating whether the preview is visible.
         /// </summary>

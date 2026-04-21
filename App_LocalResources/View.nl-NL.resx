@@ -273,4 +273,10 @@
   <data name="Searching.Text" xml:space="preserve">
     <value>Zoeken...</value>
   </data>
+  <data name="ConfirmSend.Text" xml:space="preserve">
+    <value>Deze nieuwsbrief versturen naar {0} ontvangersgroep(en) en {1} extra e-mailadres(sen)? Deze actie kan niet ongedaan worden gemaakt.</value>
+  </data>
+  <data name="ConfirmNoRecipients.Text" xml:space="preserve">
+    <value>Er zijn geen ontvangers geselecteerd. Toch versturen?</value>
+  </data>
 </root>

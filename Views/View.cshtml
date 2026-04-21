@@ -8,9 +8,11 @@
      data-moduleid="@Model.ModuleId"
      data-initial-entries="@Html.Raw(HttpUtility.HtmlAttributeEncode(Model.InitialEntries ?? "[]"))"
      data-text-noresults="@Html.LocalizeString("NoResults")"
-     data-text-searching="@Html.LocalizeString("Searching")">
+     data-text-searching="@Html.LocalizeString("Searching")"
+     data-text-confirmsend="@Html.LocalizeString("ConfirmSend")"
+     data-text-norecipients="@Html.LocalizeString("ConfirmNoRecipients")">
 
-    <div class="status-area">
+    <div class="status-area" role="status" aria-live="polite" aria-atomic="true">
         @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
         {
             <div class="@Model.StatusCssClass">@Model.StatusMessage</div>
@@ -78,14 +80,14 @@
 
                 <div class="dnnFormItem">
                     <div class="dnnLabel" style="position:relative">
-                        <label for="Subject_@Model.ModuleId">@Html.LocalizeString("plSubject")</label>
+                        <label for="Subject_@Model.ModuleId">@Html.LocalizeString("plSubject") <span aria-hidden="true" class="required-marker">*</span></label>
                     </div>
-                    <input type="text" id="Subject_@Model.ModuleId" name="Subject" maxlength="100" value="@Model.Subject" />
+                    <input type="text" id="Subject_@Model.ModuleId" name="Subject" maxlength="100" value="@Model.Subject" required="required" aria-required="true" />
                 </div>
 
                 <div class="dnnFormItem ckediv">
                     <div class="dnnLabel" style="position:relative">
-                        <label for="Message">@Html.LocalizeString("Message")</label>
+                        <label for="Message">@Html.LocalizeString("Message") <span aria-hidden="true" class="required-marker">*</span></label>
                     </div>
                     @Html.CKEditorEditorFor(x => x.Message, Model.ModuleId)
                 </div>
@@ -152,6 +154,7 @@
                 <ul class="dnnActions dnnClear">
                     <li><button type="button" class="dnnPrimaryAction btn-send">@Html.LocalizeString("cmdSend")</button></li>
                     <li><button type="button" class="dnnSecondaryAction btn-preview">@Html.LocalizeString("cmdPreview")</button></li>
+                    <li class="newsletter-spinner" aria-hidden="true" hidden><span class="newsletter-spinner-icon"></span></li>
                 </ul>
             </div>
         </div>

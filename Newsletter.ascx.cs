@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -42,7 +43,6 @@ using DotNetNuke.Services.Tokens;
 using DotNetNuke.UI.Skins.Controls;
 using Microsoft.Extensions.DependencyInjection; 
 using Dnn.Modules.Newsletters.Components;
-using System.Text.RegularExpressions;
 using System.Web;
 using System.Net.Mime;
 using DotNetNuke.Abstractions.Application;
@@ -83,23 +83,40 @@ namespace Dnn.Modules.Newsletters
 
         #region Private Methods
 
-        /// <summary>
-        /// helper function for ManageDirectoryBase
-        /// <history>
-        /// [vmasanas] 2007-09-07 added
-        /// [sleupold] 2008-02-10 support for local links added
-        /// </history>
-        /// </summary>
-        private static string FormatUrls(Match m)
+        /// <summary>JSON-string-encode an arbitrary value for safe inclusion between double quotes in a JS literal.</summary>
+        private static string JsonEscape(string value)
         {
-            var match = m.Value;
-            var url = m.Groups["url"].Value;
-            var result = match;
-            if (url.StartsWith("/")) //server absolute path
+            if (string.IsNullOrEmpty(value))
             {
-                return result.Replace(url, Globals.AddHTTP(HttpContext.Current.Request.Url.Host) + url);
+                return string.Empty;
             }
-            return url.Contains("://") || url.Contains("mailto:") ? result : result.Replace(url, Globals.AddHTTP(HttpContext.Current.Request.Url.Host) + Globals.ApplicationPath + "/" + url);
+
+            var sb = new StringBuilder(value.Length + 8);
+            foreach (var c in value)
+            {
+                switch (c)
+                {
+                    case '\\': sb.Append("\\\\"); break;
+                    case '"': sb.Append("\\\""); break;
+                    case '/': sb.Append("\\/"); break; // also escapes "</script>" sequence
+                    case '\b': sb.Append("\\b"); break;
+                    case '\f': sb.Append("\\f"); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    default:
+                        if (c < ' ' || c == '\u2028' || c == '\u2029')
+                        {
+                            sb.AppendFormat("\\u{0:x4}", (int)c);
+                        }
+                        else
+                        {
+                            sb.Append(c);
+                        }
+                        break;
+                }
+            }
+            return sb.ToString();
         }
 
         #endregion
@@ -119,10 +136,10 @@ namespace Dnn.Modules.Newsletters
 
             foreach (var value in (Request.QueryString["users"] ?? string.Empty).Split(','))
                 if (int.TryParse(value, out id) && (user = UserController.GetUserById(_hostSettings, PortalId, id)) != null)
-                    entities.AppendFormat(@"{{ id: ""user-{0}"", name: ""{1}"" }},", user.UserID, user.DisplayName.Replace("\"", ""));
+                    entities.AppendFormat(@"{{ ""id"": ""user-{0}"", ""name"": ""{1}"" }},", user.UserID, JsonEscape(user.DisplayName));
             foreach (var value in (Request.QueryString["roles"] ?? string.Empty).Split(','))
                 if (int.TryParse(value, out id) && (role = RoleController.Instance.GetRoleById(PortalId, id)) != null)
-                    entities.AppendFormat(@"{{ id: ""role-{0}"", name: ""{1}"" }},", role.RoleID, role.RoleName.Replace("\"", ""));
+                    entities.AppendFormat(@"{{ ""id"": ""role-{0}"", ""name"": ""{1}"" }},", role.RoleID, JsonEscape(role.RoleName));
 
             return entities.Append(']').ToString();
         }
@@ -153,7 +170,7 @@ namespace Dnn.Modules.Newsletters
                     txtFrom.Text = UserInfo.Email;
                 }
                 plLanguages.Visible = (LocaleController.Instance.GetLocales(PortalId).Count > 1);
-                pnlRelayAddress.Visible = (cboSendMethod.SelectedValue == "RELAY");
+                pnlRelayAddress.Visible = (cboSendMethod.SelectedValue == Constants.SendMethod.Relay);
             }
             catch (Exception exc) //Module failed to load
             {
@@ -182,6 +199,29 @@ namespace Dnn.Modules.Newsletters
                 if (IsReadyToSend(roleNames, users, ref message, ref messageType))
                 {
                     SendEmail(roleNames, users, ref message, ref messageType);
+
+                    // Compliance audit: only record on success. The audit row contains operator
+                    // identity, role names, recipient counts, transport choice, and client IP --
+                    // never the message body, attachments, SMTP credentials, or raw recipient
+                    // addresses.
+                    if (messageType == ModuleMessage.ModuleMessageType.GreenSuccess)
+                    {
+                        var additionalEmailCount = users.Count(u => u != null && u.UserID == Null.NullInteger);
+                        var userRecipientCount = users.Count - additionalEmailCount;
+                        var clientIp = Request?.UserHostAddress ?? string.Empty;
+
+                        Components.NewsletterMailHelper.WriteSendAuditLog(
+                            _eventLogger,
+                            PortalSettings,
+                            UserInfo?.UserID ?? -1,
+                            txtSubject.Text,
+                            roleNames,
+                            userRecipientCount,
+                            additionalEmailCount,
+                            cboSendMethod.SelectedItem?.Value,
+                            optSendAction.SelectedItem?.Value,
+                            clientIp);
+                    }
                 }
 
                 DotNetNuke.UI.Skins.Skin.AddModuleMessage(this, message, messageType);
@@ -212,7 +252,8 @@ namespace Dnn.Modules.Newsletters
             if (isValid)
             {
 
-                if (optSendAction.SelectedItem.Value == "S")
+                var sendActionValue = optSendAction.SelectedItem?.Value;
+                if (sendActionValue == Constants.SendAction.Synchronous)
                 {
                     try
                     {
@@ -225,14 +266,24 @@ namespace Dnn.Modules.Newsletters
                 }
                 else
                 {
-                    SendMailAsyncronously(email, out message, out messageType);
-                    //dispose will be handled by async thread
+                    bool ownershipTransferred;
+                    SendMailAsynchronously(email, out message, out messageType, out ownershipTransferred);
+                    if (!ownershipTransferred)
+                    {
+                        // Test message failed: thread was never started, we still own the email.
+                        email.Dispose();
+                    }
                 }
+            }
+            else
+            {
+                email.Dispose();
             }
         }
 
-        private void SendMailAsyncronously(SendTokenizedBulkEmail email, out string message, out ModuleMessage.ModuleMessageType messageType)
+        private void SendMailAsynchronously(SendTokenizedBulkEmail email, out string message, out ModuleMessage.ModuleMessageType messageType, out bool ownershipTransferred)
         {
+            ownershipTransferred = false;
             //First send off a test message
             var strStartSubj = Localization.GetString("EMAIL_BulkMailStart_Subject.Text", Localization.GlobalResourceFile);
             if (!string.IsNullOrEmpty(strStartSubj)) strStartSubj = string.Format(strStartSubj, txtSubject.Text);
@@ -265,8 +316,16 @@ namespace Dnn.Modules.Newsletters
 
             if (string.IsNullOrEmpty(sendMailResult))
             {
-                var objThread = new Thread(() => SendAndDispose(email));
+                // Capture culture before transferring ownership; HttpContext.Current is null on the worker thread.
+                var culture = Thread.CurrentThread.CurrentCulture;
+                var uiCulture = Thread.CurrentThread.CurrentUICulture;
+                var objThread = new Thread(() => Components.NewsletterMailHelper.SendAndDispose(email, culture, uiCulture))
+                {
+                    IsBackground = true,
+                    Name = "Newsletters.BulkSend",
+                };
                 objThread.Start();
+                ownershipTransferred = true;
                 message = Localization.GetString("MessageSent", LocalResourceFile);
                 messageType = ModuleMessage.ModuleMessageType.GreenSuccess;
             }
@@ -277,13 +336,8 @@ namespace Dnn.Modules.Newsletters
             }
         }
 
-        private void SendAndDispose(SendTokenizedBulkEmail email)
-        {
-            using (email)
-            {
-                email.Send();
-            }
-        }
+        private static void SendAndDispose(SendTokenizedBulkEmail email, CultureInfo culture, CultureInfo uiCulture)
+            => Components.NewsletterMailHelper.SendAndDispose(email, culture, uiCulture);
 
         private void SendMailSynchronously(SendTokenizedBulkEmail email, out string strResult, out ModuleMessage.ModuleMessageType msgResult)
         {
@@ -296,7 +350,7 @@ namespace Dnn.Modules.Newsletters
             }
             else
             {
-                strResult = string.Format(Localization.GetString("NoMessagesSent", LocalResourceFile), email.SendingUser.Email);
+                strResult = string.Format(Localization.GetString("NoMessagesSent", LocalResourceFile), email.SendingUser?.Email ?? string.Empty);
                 msgResult = ModuleMessage.ModuleMessageType.YellowWarning;
             }
         }
@@ -307,7 +361,7 @@ namespace Dnn.Modules.Newsletters
 
             switch (teMessage.Mode)
             {
-                case "RICH":
+                case Constants.BodyMode.Rich:
                     email.BodyFormat = MailFormat.Html;
                     break;
                 default:
@@ -315,15 +369,15 @@ namespace Dnn.Modules.Newsletters
                     break;
             }
 
-            switch (cboPriority.SelectedItem.Value)
+            switch (cboPriority.SelectedItem?.Value)
             {
-                case "1":
+                case Constants.Priority.High:
                     email.Priority = MailPriority.High;
                     break;
-                case "2":
+                case Constants.Priority.Normal:
                     email.Priority = MailPriority.Normal;
                     break;
-                case "3":
+                case Constants.Priority.Low:
                     email.Priority = MailPriority.Low;
                     break;
                 default:
@@ -331,14 +385,14 @@ namespace Dnn.Modules.Newsletters
                     break;
             }
 
-            if (txtFrom.Text != string.Empty && email.SendingUser.Email != txtFrom.Text)
+            if (txtFrom.Text != string.Empty && email.SendingUser?.Email != txtFrom.Text)
             {
                 var myUser = email.SendingUser ?? new UserInfo();
                 myUser.Email = txtFrom.Text;
                 email.SendingUser = myUser;
             }
 
-            if (txtReplyTo.Text != string.Empty && email.ReplyTo.Email != txtReplyTo.Text)
+            if (txtReplyTo.Text != string.Empty && email.ReplyTo?.Email != txtReplyTo.Text)
             {
                 var myUser = new UserInfo { Email = txtReplyTo.Text };
                 email.ReplyTo = myUser;
@@ -358,15 +412,15 @@ namespace Dnn.Modules.Newsletters
                                                new ContentType { MediaType = objFileInfo.ContentType, Name = objFileInfo.FileName });
             }
 
-            switch (cboSendMethod.SelectedItem.Value)
+            switch (cboSendMethod.SelectedItem?.Value)
             {
-                case "TO":
+                case Constants.SendMethod.To:
                     email.AddressMethod = SendTokenizedBulkEmail.AddressMethods.Send_TO;
                     break;
-                case "BCC":
+                case Constants.SendMethod.Bcc:
                     email.AddressMethod = SendTokenizedBulkEmail.AddressMethods.Send_BCC;
                     break;
-                case "RELAY":
+                case Constants.SendMethod.Relay:
                     email.AddressMethod = SendTokenizedBulkEmail.AddressMethods.Send_Relay;
                     if (string.IsNullOrEmpty(txtRelayAddress.Text))
                     {
@@ -449,7 +503,7 @@ namespace Dnn.Modules.Newsletters
                 if (chkReplaceTokens.Checked)
                 {
                     var objTr = new TokenReplace();
-                    if (cboSendMethod.SelectedItem.Value == "TO")
+                    if (cboSendMethod.SelectedItem.Value == Constants.SendMethod.To)
                     {
                         objTr.User = UserInfo;
                         objTr.AccessingUser = UserInfo;
@@ -471,12 +525,11 @@ namespace Dnn.Modules.Newsletters
             }
         }
 
-        private static string ConvertToAbsoluteUrls(string content)
-        {
-            //convert links to absolute
-            const string pattern = "<(a|link|img|script|object).[^>]*(href|src|action)=(\\\"|'|)(?<url>(.[^\\\"']*))(\\\"|'|)[^>]*>";
-            return Regex.Replace(content, pattern, FormatUrls);
-        }
+        private string ConvertToAbsoluteUrls(string content)
+            => Components.NewsletterMailHelper.ConvertToAbsoluteUrls(
+                content,
+                PortalSettings?.PortalAlias?.HTTPAlias,
+                Globals.ApplicationPath);
 
         #endregion
 

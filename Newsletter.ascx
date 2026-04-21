@@ -119,6 +119,9 @@
 <script language="javascript" type="text/javascript">
 /*globals jQuery, window, Sys */
 (function ($, Sys) {
+    function htmlEncode(str) {
+        return $('<div/>').text(str == null ? '' : String(str)).html();
+    }
     function setUpDnnNewsletter() {
         $('#dnnNewsletters').dnnTabs();
 
@@ -126,12 +129,14 @@
             theme: "facebook",
             prePopulate: <%=GetInitialEntries()%>,
             resultsFormatter: function (item) {
-                if (item.id.startsWith("user-")) {
-                    return "<li class='user'><img src='" + item.iconfile + "' title='" + item.name + "' height='25px' width='25px' /><span>" + item.name + "</span></li>";
-                } else if (item.id.startsWith("role-")) {
-                    return "<li class='role'><img src='" + item.iconfile + "' title='" + item.name + "' height='25px' width='25px' /><span>" + item.name + "</span></li>";
+                var name = htmlEncode(item.name);
+                var icon = htmlEncode(item.iconfile);
+                if (item.id && String(item.id).indexOf("user-") === 0) {
+                    return "<li class='user'><img src=\"" + icon + "\" title=\"" + name + "\" height='25px' width='25px' /><span>" + name + "</span></li>";
+                } else if (item.id && String(item.id).indexOf("role-") === 0) {
+                    return "<li class='role'><img src=\"" + icon + "\" title=\"" + name + "\" height='25px' width='25px' /><span>" + name + "</span></li>";
                 }
-                return "<li>" + item[this.propertyToSearch] + "</li>";
+                return "<li>" + htmlEncode(item[this.propertyToSearch]) + "</li>";
             },
             minChars: 2,
             preventDuplicates: true,

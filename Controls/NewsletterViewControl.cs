@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
+using Dnn.Modules.Newsletters.Components;
 using Dnn.Modules.Newsletters.Models;
 using DotNetNuke.Common;
 using DotNetNuke.Entities.Users;
@@ -74,9 +75,9 @@ namespace Dnn.Modules.Newsletters.Controls
             {
                 ModuleId = ModuleId,
                 From = CurrentUser?.Email ?? string.Empty,
-                SendMethod = "TO",
-                SendAction = "A",
-                Priority = "2",
+                SendMethod = Constants.SendMethod.To,
+                SendAction = Constants.SendAction.Asynchronous,
+                Priority = Constants.Priority.Normal,
                 ReplaceTokens = true,
                 InitialEntries = GetInitialEntries(),
                 LanguagesVisible = locales.Count > 1,
@@ -141,7 +142,7 @@ namespace Dnn.Modules.Newsletters.Controls
             {
                 if (int.TryParse(value, out id) && (user = UserController.GetUserById(hostSettings, PortalId, id)) != null)
                 {
-                    entities.AppendFormat(@"{{ ""id"": ""user-{0}"", ""name"": ""{1}"" }},", user.UserID, user.DisplayName.Replace("\"", string.Empty));
+                    entities.AppendFormat(@"{{ ""id"": ""user-{0}"", ""name"": ""{1}"" }},", user.UserID, JsonEscape(user.DisplayName));
                 }
             }
 
@@ -149,7 +150,7 @@ namespace Dnn.Modules.Newsletters.Controls
             {
                 if (int.TryParse(value, out id) && (role = RoleController.Instance.GetRoleById(PortalId, id)) != null)
                 {
-                    entities.AppendFormat(@"{{ ""id"": ""role-{0}"", ""name"": ""{1}"" }},", role.RoleID, role.RoleName.Replace("\"", string.Empty));
+                    entities.AppendFormat(@"{{ ""id"": ""role-{0}"", ""name"": ""{1}"" }},", role.RoleID, JsonEscape(role.RoleName));
                 }
             }
 
@@ -159,6 +160,43 @@ namespace Dnn.Modules.Newsletters.Controls
             }
 
             return entities.Append(']').ToString();
+        }
+
+        /// <summary>JSON-string-encode an arbitrary value for safe inclusion between double quotes in a JSON literal
+        /// (also handles control chars and the U+2028/U+2029 line terminators that break JS string parsing).</summary>
+        private static string JsonEscape(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            var sb = new StringBuilder(value.Length + 8);
+            foreach (var c in value)
+            {
+                switch (c)
+                {
+                    case '\\': sb.Append("\\\\"); break;
+                    case '"': sb.Append("\\\""); break;
+                    case '/': sb.Append("\\/"); break;
+                    case '\b': sb.Append("\\b"); break;
+                    case '\f': sb.Append("\\f"); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    default:
+                        if (c < ' ' || c == '\u2028' || c == '\u2029')
+                        {
+                            sb.AppendFormat("\\u{0:x4}", (int)c);
+                        }
+                        else
+                        {
+                            sb.Append(c);
+                        }
+                        break;
+                }
+            }
+            return sb.ToString();
         }
 
         #region ConfigurePage

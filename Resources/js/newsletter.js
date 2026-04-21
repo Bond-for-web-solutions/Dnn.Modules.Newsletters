@@ -1,6 +1,10 @@
 (function ($) {
     'use strict';
 
+    function htmlEncode(str) {
+        return $('<div/>').text(str == null ? '' : String(str)).html();
+    }
+
     function initNewsletter($module) {
         if ($module.data('newsletter-init')) return;
         $module.data('newsletter-init', true);
@@ -25,6 +29,9 @@
             $module.find('.relay-address-panel').toggle($(this).val() === 'RELAY');
         });
 
+        // Mark the CKEditor-bound textarea as required for assistive tech.
+        $module.find('textarea[name="Message"]').attr('aria-required', 'true');
+
         // Set multipart encoding for file uploads
         $form.attr('enctype', 'multipart/form-data').attr('encoding', 'multipart/form-data');
         $('form#Form').attr('enctype', 'multipart/form-data').attr('encoding', 'multipart/form-data');
@@ -36,8 +43,33 @@
 
         // Send button
         $module.find('.btn-send').on('click', function () {
+            if (!confirmSend()) return;
             submitAction('Send');
         });
+
+        function countAdditionalEmails() {
+            var raw = $module.find('[name="AdditionalEmails"]').val() || '';
+            if (!raw.trim()) return 0;
+            return raw.split(/[;,\r\n]+/).filter(function (s) { return s.trim().length > 0; }).length;
+        }
+
+        function countTokenRecipients() {
+            // tokenInput hides the original input and renders <li class="token-input-token-facebook"> entries.
+            return $module.find('ul.token-input-list-facebook li.token-input-token-facebook').length;
+        }
+
+        function confirmSend() {
+            var groups = countTokenRecipients();
+            var emails = countAdditionalEmails();
+            var template = $module.attr('data-text-confirmsend')
+                || 'Send this newsletter to {0} recipient group(s) and {1} additional email address(es)? This action cannot be undone.';
+            var noRecipientsMsg = $module.attr('data-text-norecipients')
+                || 'No recipients selected. Send anyway?';
+            var msg = (groups === 0 && emails === 0)
+                ? noRecipientsMsg
+                : template.replace('{0}', groups).replace('{1}', emails);
+            return window.confirm(msg);
+        }
 
         // Cancel preview — purely client-side
         $module.find('.btn-cancel-preview').on('click', function () {
@@ -49,6 +81,15 @@
             for (var name in CKEDITOR.instances) {
                 CKEDITOR.instances[name].updateElement();
             }
+
+            // Double-submit prevention: ignore re-clicks while a request is in flight.
+            if ($module.data('newsletter-busy')) {
+                return;
+            }
+            $module.data('newsletter-busy', true);
+            var $actionButtons = $module.find('.btn-preview, .btn-send').prop('disabled', true).attr('aria-disabled', 'true');
+            $module.attr('aria-busy', 'true');
+            $module.find('.newsletter-spinner').prop('hidden', false);
 
             var data = collectFormData();
 
@@ -77,6 +118,13 @@
                         else if (err.Message) msg = err.Message;
                     } catch (e) { /* ignore parse errors */ }
                     showStatus(msg, 'dnnFormMessage dnnFormError');
+                },
+                complete: function () {
+                    // Always reset busy state so the user is never stuck if success/error doesn't fire.
+                    $module.data('newsletter-busy', false);
+                    $actionButtons.prop('disabled', false).removeAttr('aria-disabled');
+                    $module.removeAttr('aria-busy');
+                    $module.find('.newsletter-spinner').prop('hidden', true);
                 }
             });
         }
@@ -112,10 +160,6 @@
                 $status.empty().hide();
             }
         }
-
-        function htmlEncode(str) {
-            return $('<div/>').text(str).html();
-        }
     }
 
     function initTokenInput($module, mid, sf) {
@@ -141,13 +185,15 @@
                 noResultsText: noResultsText,
                 searchingText: searchingText,
                 resultsFormatter: function (item) {
-                    if (item.id && item.id.indexOf('user-') === 0) {
-                        return "<li class='user'><img src='" + item.iconfile + "' title='" + item.name + "' height='25' width='25' /><span>" + item.name + "</span></li>";
+                    var name = htmlEncode(item.name);
+                    var icon = htmlEncode(item.iconfile);
+                    if (item.id && String(item.id).indexOf('user-') === 0) {
+                        return "<li class='user'><img src=\"" + icon + "\" title=\"" + name + "\" height='25' width='25' /><span>" + name + "</span></li>";
                     }
-                    if (item.id && item.id.indexOf('role-') === 0) {
-                        return "<li class='role'><img src='" + item.iconfile + "' title='" + item.name + "' height='25' width='25' /><span>" + item.name + "</span></li>";
+                    if (item.id && String(item.id).indexOf('role-') === 0) {
+                        return "<li class='role'><img src=\"" + icon + "\" title=\"" + name + "\" height='25' width='25' /><span>" + name + "</span></li>";
                     }
-                    return '<li>' + item.name + '</li>';
+                    return '<li>' + name + '</li>';
                 },
                 onError: function (xhr, status) {
                     var messageNode = $('<div/>')
