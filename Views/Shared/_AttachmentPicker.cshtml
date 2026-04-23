@@ -8,29 +8,28 @@
     var uploadInputId = prefix + "_UploadFiles";
     var dropzoneId = prefix + "_Dropzone";
     var fileListId = prefix + "_FileList";
-    var addBtnId = prefix + "_AddBtn";
 }
 
-<div class="dnnFormItem dnnAttachmentPicker" data-moduleid="@Model.ModuleId" data-prefix="@prefix">
-    <input type="file" id="@uploadInputId" name="UploadFiles" multiple class="attachment-hidden-input" />
-    <div class="dnnLabel" style="position:relative">
+<div class="nl-row nl-attachment" data-moduleid="@Model.ModuleId" data-prefix="@prefix">
+    <input type="file" id="@uploadInputId" name="UploadFiles" multiple class="nl-attachment-hidden-input" />
+    <div class="nl-label">
         <label>@Model.Label</label>
     </div>
-    <div class="attachment-picker-content">
-        <div class="attachment-picker-grid">
-            <div class="attachment-picker-left">
-                <div class="attachment-picker-row">
-                    <label class="picker-label" for="@folderSelectId">Folder:</label>
-                    <select id="@folderSelectId" name="AttachmentFolderId">
+    <div class="nl-control nl-attachment-content">
+        <div class="nl-attachment-grid">
+            <div class="nl-attachment-left">
+                <div class="nl-attachment-row">
+                    <label class="nl-attachment-rowlabel" for="@folderSelectId">Folder:</label>
+                    <select id="@folderSelectId" name="AttachmentFolderId" class="nl-input nl-select">
                         @foreach (var folder in Model.Folders)
                         {
                             <option value="@folder.FolderId" @(folder.FolderId == Model.SelectedFolderId ? "selected=\"selected\"" : "")>@folder.DisplayName</option>
                         }
                     </select>
                 </div>
-                <div class="attachment-picker-row">
-                    <label class="picker-label" for="@fileSelectId">File:</label>
-                    <select id="@fileSelectId">
+                <div class="nl-attachment-row">
+                    <label class="nl-attachment-rowlabel" for="@fileSelectId">File:</label>
+                    <select id="@fileSelectId" class="nl-input nl-select">
                         <option value="">&lt;None Specified&gt;</option>
                         @foreach (var file in Model.Files)
                         {
@@ -39,24 +38,23 @@
                     </select>
                 </div>
             </div>
-            <div class="attachment-dropzone" id="@dropzoneId">
-                <div class="dropzone-content">
+            <div class="nl-dropzone" id="@dropzoneId">
+                <div class="nl-dropzone-content">
                     <p>Drop file(s) here</p>
-                    <p>or <a href="javascript:void(0)" class="dropzone-browse">browse</a></p>
+                    <p>or <a href="javascript:void(0)" class="nl-dropzone-browse">browse</a></p>
                 </div>
             </div>
         </div>
-        <div class="attachment-file-list" id="@fileListId">
+        <div class="nl-attachment-list" id="@fileListId">
             @foreach (var att in Model.SelectedAttachments)
             {
-                <div class="attachment-item" data-file-id="@att.FileId">
+                <div class="nl-attachment-item" data-file-id="@att.FileId">
                     <input type="hidden" name="AttachmentFileIds" value="@att.FileId" />
-                    <span class="attachment-item-icon">&#128196;</span>
-                    <span class="attachment-item-name">@att.FileName</span>
-                    <button type="button" class="attachment-item-remove" title="Remove">&times;</button>
+                    <span class="nl-attachment-icon">&#128196;</span>
+                    <span class="nl-attachment-name">@att.FileName</span>
+                    <button type="button" class="nl-attachment-remove" title="Remove">&times;</button>
                 </div>
             }
         </div>
     </div>
 </div>
-

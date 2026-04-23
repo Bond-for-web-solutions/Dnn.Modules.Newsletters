@@ -3,8 +3,6 @@
 @using DotNetNuke.Web.MvcPipeline.Modules
 @model NewsletterViewModel
 @functions {
-    // Centralize all view localization through the WebForms control's resource
-    // file so we maintain a single set of resx files (Newsletter.ascx.resx).
     const string NewsletterResourceFile = "~/DesktopModules/Admin/Newsletters/App_LocalResources/Newsletter.ascx.resx";
     string L(string key)
     {
@@ -12,8 +10,15 @@
     }
 }
 
-<div class="dnnForm dnnNewsletters dnnClear"
-     id="dnnNewsletters_@Model.ModuleId"
+@*
+    All class names are prefixed with "nl-" so they cannot collide with or be
+    affected by DotNetNuke's global dnn.css / form.css / dnnCheckbox plugin.
+    No "dnnForm", "dnnFormItem", "dnnLabel", "dnnPrimaryAction", "dnnCheckbox"
+    classes appear here, which prevents DNN's auto-attached widgets and the
+    inherited margins / orange validation highlight.
+*@
+<div class="nl-module"
+     id="nl-module-@Model.ModuleId"
      data-moduleid="@Model.ModuleId"
      data-initial-entries="@Html.Raw(HttpUtility.HtmlAttributeEncode(Model.InitialEntries ?? "[]"))"
      data-text-noresults="@L("NoResults")"
@@ -21,43 +26,45 @@
      data-text-confirmsend="@L("ConfirmSend")"
      data-text-norecipients="@L("ConfirmNoRecipients")">
 
-    <div class="status-area" role="status" aria-live="polite" aria-atomic="true">
+    <div class="nl-status" role="status" aria-live="polite" aria-atomic="true">
         @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
         {
             <div class="@Model.StatusCssClass">@Model.StatusMessage</div>
         }
     </div>
 
-    <ul class="dnnAdminTabNav dnnClear">
-        <li><a href="#newMessage_@Model.ModuleId">@L("Message")</a></li>
-        <li><a href="#newAdvancedSettings_@Model.ModuleId">@L("AdvancedSettings")</a></li>
+    <ul class="nl-tabs" role="tablist">
+        <li class="nl-tab nl-tab-active" role="tab" data-target="#nl-panel-message-@Model.ModuleId" tabindex="0">@L("Message")</li>
+        <li class="nl-tab" role="tab" data-target="#nl-panel-advanced-@Model.ModuleId" tabindex="-1">@L("AdvancedSettings")</li>
     </ul>
 
-    <div id="newsletterForm_@Model.ModuleId" class="newsletter-form">
+    <div id="nl-form-@Model.ModuleId" class="nl-form">
 
-        <div class="newMessage" id="newMessage_@Model.ModuleId">
-            <fieldset>
-                <div class="dnnFormItem">
-                    <div class="dnnLabel" style="position:relative">
-                        <label for="recipients_@Model.ModuleId">@L("plRoles")</label>
+        <div class="nl-panel nl-panel-active" id="nl-panel-message-@Model.ModuleId" role="tabpanel">
+            <fieldset class="nl-fieldset">
+                <div class="nl-row">
+                    <div class="nl-label">
+                        <label for="recipients_@Model.ModuleId">@L("plRoles") <span aria-hidden="true" class="nl-required">*</span></label>
                     </div>
-                    <input type="text" id="recipients_@Model.ModuleId" name="Recipients" value="@Model.Recipients" />
+                    <div class="nl-control">
+                        <input type="text" id="recipients_@Model.ModuleId" name="Recipients" value="@Model.Recipients" class="nl-input" />
+                    </div>
                 </div>
 
                 @if (Model.LanguagesVisible && Model.AvailableLanguages.Count > 0)
                 {
-                    <div class="dnnFormItem">
-                        <div class="dnnLabel" style="position:relative">
+                    <div class="nl-row">
+                        <div class="nl-label">
                             <label>@L("plLanguages")</label>
                         </div>
-                        <div class="dnnLangSelector">
-                            <ul>
+                        <div class="nl-control">
+                            <ul class="nl-lang">
                                 @foreach (var language in Model.AvailableLanguages)
                                 {
                                     <li>
-                                        <label>
-                                            <input type="checkbox" name="SelectedLanguages" value="@language.Value" @(language.Selected ? "checked=\"checked\"" : string.Empty) />
-                                            @language.Text
+                                        <label class="nl-check-label">
+                                            <input type="checkbox" name="SelectedLanguages" value="@language.Value" @(language.Selected ? "checked=\"checked\"" : string.Empty) class="nl-checkbox" />
+                                            <span>@language.Text</span>
                                         </label>
                                     </li>
                                 }
@@ -66,125 +73,138 @@
                     </div>
                 }
 
-                <div class="dnnFormItem">
-                    <div class="dnnLabel" style="position:relative">
+                <div class="nl-row">
+                    <div class="nl-label">
                         <label for="AdditionalEmails_@Model.ModuleId">@L("plEmail")</label>
                     </div>
-                    <textarea id="AdditionalEmails_@Model.ModuleId" name="AdditionalEmails" rows="3" class="noResize">@Model.AdditionalEmails</textarea>
+                    <div class="nl-control">
+                        <textarea id="AdditionalEmails_@Model.ModuleId" name="AdditionalEmails" rows="3" class="nl-input nl-textarea">@Model.AdditionalEmails</textarea>
+                    </div>
                 </div>
 
-                <div class="dnnFormItem">
-                    <div class="dnnLabel" style="position:relative">
+                <div class="nl-row">
+                    <div class="nl-label">
                         <label for="From_@Model.ModuleId">@L("plFrom")</label>
                     </div>
-                    <input type="text" id="From_@Model.ModuleId" name="From" maxlength="100" value="@Model.From" />
+                    <div class="nl-control">
+                        <input type="text" id="From_@Model.ModuleId" name="From" maxlength="100" value="@Model.From" class="nl-input" />
+                    </div>
                 </div>
 
-                <div class="dnnFormItem">
-                    <div class="dnnLabel" style="position:relative">
+                <div class="nl-row">
+                    <div class="nl-label">
                         <label for="ReplyTo_@Model.ModuleId">@L("plReplyTo")</label>
                     </div>
-                    <input type="text" id="ReplyTo_@Model.ModuleId" name="ReplyTo" maxlength="100" value="@Model.ReplyTo" />
+                    <div class="nl-control">
+                        <input type="text" id="ReplyTo_@Model.ModuleId" name="ReplyTo" maxlength="100" value="@Model.ReplyTo" class="nl-input" />
+                    </div>
                 </div>
 
-                <div class="dnnFormItem">
-                    <div class="dnnLabel" style="position:relative">
-                        <label for="Subject_@Model.ModuleId">@L("plSubject") <span aria-hidden="true" class="required-marker">*</span></label>
+                <div class="nl-row">
+                    <div class="nl-label">
+                        <label for="Subject_@Model.ModuleId">@L("plSubject") <span aria-hidden="true" class="nl-required">*</span></label>
                     </div>
-                    <input type="text" id="Subject_@Model.ModuleId" name="Subject" maxlength="100" value="@Model.Subject" required="required" aria-required="true" />
+                    <div class="nl-control">
+                        <input type="text" id="Subject_@Model.ModuleId" name="Subject" maxlength="100" value="@Model.Subject" required="required" aria-required="true" class="nl-input" />
+                    </div>
                 </div>
 
-                <div class="dnnFormItem ckediv">
-                    <div class="dnnLabel" style="position:relative">
-                        <label for="Message">@L("Message") <span aria-hidden="true" class="required-marker">*</span></label>
+                <div class="nl-row nl-row-ck">
+                    <div class="nl-label">
+                        <label for="Message">@L("Message") <span aria-hidden="true" class="nl-required">*</span></label>
                     </div>
-                    @Html.CKEditorEditorFor(x => x.Message, Model.ModuleId)
+                    <div class="nl-control nl-ck">
+                        @Html.CKEditorEditorFor(x => x.Message, Model.ModuleId)
+                    </div>
                 </div>
             </fieldset>
         </div>
 
-        <div class="newAdvancedSettings" id="newAdvancedSettings_@Model.ModuleId">
-            <fieldset>
+        <div class="nl-panel" id="nl-panel-advanced-@Model.ModuleId" role="tabpanel" hidden>
+            <fieldset class="nl-fieldset">
                 @Html.Partial("~/DesktopModules/Admin/Newsletters/Views/Shared/_AttachmentPicker.cshtml", Model.Attachment)
 
-                <div class="dnnFormItem">
-                    <div class="dnnLabel" style="position:relative">
+                <div class="nl-row">
+                    <div class="nl-label">
                         <label for="ReplaceTokens_@Model.ModuleId">@L("plReplaceTokens")</label>
                     </div>
-                    <input type="checkbox" id="ReplaceTokens_@Model.ModuleId" name="ReplaceTokens" @(Model.ReplaceTokens ? "checked=\"checked\"" : string.Empty) />
+                    <div class="nl-control">
+                        <label class="nl-check-label">
+                            <input type="checkbox" id="ReplaceTokens_@Model.ModuleId" name="ReplaceTokens" @(Model.ReplaceTokens ? "checked=\"checked\"" : string.Empty) class="nl-checkbox" />
+                        </label>
+                    </div>
                 </div>
 
-                <div class="dnnFormItem">
-                    <div class="dnnLabel" style="position:relative">
+                <div class="nl-row">
+                    <div class="nl-label">
                         <label for="Priority_@Model.ModuleId">@L("plPriority")</label>
                     </div>
-                    <select id="Priority_@Model.ModuleId" name="Priority">
-                        <option value="1" @(Model.Priority == "1" ? "selected=\"selected\"" : string.Empty)>@L("High")</option>
-                        <option value="2" @(Model.Priority == "2" ? "selected=\"selected\"" : string.Empty)>@L("Normal")</option>
-                        <option value="3" @(Model.Priority == "3" ? "selected=\"selected\"" : string.Empty)>@L("Low")</option>
-                    </select>
+                    <div class="nl-control">
+                        <select id="Priority_@Model.ModuleId" name="Priority" class="nl-input nl-select">
+                            <option value="1" @(Model.Priority == "1" ? "selected=\"selected\"" : string.Empty)>@L("High")</option>
+                            <option value="2" @(Model.Priority == "2" ? "selected=\"selected\"" : string.Empty)>@L("Normal")</option>
+                            <option value="3" @(Model.Priority == "3" ? "selected=\"selected\"" : string.Empty)>@L("Low")</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="dnnFormItem">
-                    <div class="dnnLabel" style="position:relative">
+                <div class="nl-row">
+                    <div class="nl-label">
                         <label for="SendMethod_@Model.ModuleId">@L("plSendMethod")</label>
                     </div>
-                    <select id="SendMethod_@Model.ModuleId" name="SendMethod">
-                        <option value="TO" @(Model.SendMethod == "TO" ? "selected=\"selected\"" : string.Empty)>@L("SendTo")</option>
-                        <option value="BCC" @(Model.SendMethod == "BCC" ? "selected=\"selected\"" : string.Empty)>@L("SendBCC")</option>
-                        <option value="RELAY" @(Model.SendMethod == "RELAY" ? "selected=\"selected\"" : string.Empty)>@L("SendRelay")</option>
-                    </select>
+                    <div class="nl-control">
+                        <select id="SendMethod_@Model.ModuleId" name="SendMethod" class="nl-input nl-select">
+                            <option value="TO" @(Model.SendMethod == "TO" ? "selected=\"selected\"" : string.Empty)>@L("SendTo")</option>
+                            <option value="BCC" @(Model.SendMethod == "BCC" ? "selected=\"selected\"" : string.Empty)>@L("SendBCC")</option>
+                            <option value="RELAY" @(Model.SendMethod == "RELAY" ? "selected=\"selected\"" : string.Empty)>@L("SendRelay")</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="dnnFormItem relay-address-panel" style="display:@(Model.RelayAddressVisible ? "block" : "none")">
-                    <div class="dnnLabel" style="position:relative">
+                <div class="nl-row nl-relay-row" @(Model.RelayAddressVisible ? "" : "hidden")>
+                    <div class="nl-label">
                         <label for="RelayAddress_@Model.ModuleId">@L("plRelayAddress")</label>
                     </div>
-                    <input type="text" id="RelayAddress_@Model.ModuleId" name="RelayAddress" maxlength="100" value="@Model.RelayAddress" />
+                    <div class="nl-control">
+                        <input type="text" id="RelayAddress_@Model.ModuleId" name="RelayAddress" maxlength="100" value="@Model.RelayAddress" class="nl-input" />
+                    </div>
                 </div>
 
-                <div class="dnnFormItem">
-                    <div class="dnnLabel" style="position:relative">
-                        <label for="SendAction_@Model.ModuleId">@L("plSendAction")</label>
+                <div class="nl-row">
+                    <div class="nl-label">
+                        <label>@L("plSendAction")</label>
                     </div>
-                    <div class="dnnNewsletterRadios">
-                        <input type="radio" id="Sendaction-S_@Model.ModuleId" name="SendAction" value="S" @(Model.SendAction == "S" ? "checked=\"checked\"" : string.Empty) />
-                        <label for="Sendaction-S_@Model.ModuleId">@L("Synchronous")</label>
-                        <input type="radio" id="Sendaction-A_@Model.ModuleId" name="SendAction" value="A" @(Model.SendAction == "A" ? "checked=\"checked\"" : string.Empty) />
-                        <label for="Sendaction-A_@Model.ModuleId">@L("Asynchronous")</label>
+                    <div class="nl-control nl-radios">
+                        <label class="nl-check-label">
+                            <input type="radio" id="Sendaction-S_@Model.ModuleId" name="SendAction" value="S" @(Model.SendAction == "S" ? "checked=\"checked\"" : string.Empty) class="nl-radio" />
+                            <span>@L("Synchronous")</span>
+                        </label>
+                        <label class="nl-check-label">
+                            <input type="radio" id="Sendaction-A_@Model.ModuleId" name="SendAction" value="A" @(Model.SendAction == "A" ? "checked=\"checked\"" : string.Empty) class="nl-radio" />
+                            <span>@L("Asynchronous")</span>
+                        </label>
                     </div>
                 </div>
             </fieldset>
         </div>
 
-        <div class="commands">
-            <div class="dnnLabel" style="position:relative">&#160;</div>
-            <div style="display:inline-block;">
-                <ul class="dnnActions dnnClear">
-                    <li><button type="button" class="dnnPrimaryAction btn-send">@L("cmdSend")</button></li>
-                    <li><button type="button" class="dnnSecondaryAction btn-preview">@L("cmdPreview")</button></li>
-                    <li class="newsletter-spinner" aria-hidden="true" hidden><span class="newsletter-spinner-icon"></span></li>
-                </ul>
-            </div>
-        </div>
+        <ul class="nl-actions">
+            <li><button type="button" class="nl-btn nl-btn-primary nl-btn-send">@L("cmdSend")</button></li>
+            <li><button type="button" class="nl-btn nl-btn-secondary nl-btn-preview">@L("cmdPreview")</button></li>
+            <li class="nl-spinner" aria-hidden="true" hidden><span class="nl-spinner-icon"></span></li>
+        </ul>
 
-        <div class="preview-panel dnnForm" style="display:none">
-            <table>
-                <tr>
-                    <td style="width:100px; vertical-align:top">@L("Preview")</td>
-                    <td style="width:460px;"></td>
-                </tr>
-                <tr>
-                    <td style="width:100px; vertical-align:top">@L("plSubject")</td>
-                    <td style="width:460px;" class="preview-subject-content"></td>
-                </tr>
-                <tr>
-                    <td style="width:100px; vertical-align:top">@L("Message")</td>
-                    <td style="width:460px;" class="preview-body-content"></td>
-                </tr>
-            </table>
-            <ul class="dnnActions dnnClear">
-                <li><button type="button" class="dnnPrimaryAction btn-cancel-preview">@L("cmdCancelPreview")</button></li>
+        <div class="nl-preview" hidden>
+            <dl class="nl-preview-list">
+                <dt>@L("Preview")</dt>
+                <dd></dd>
+                <dt>@L("plSubject")</dt>
+                <dd class="nl-preview-subject"></dd>
+                <dt>@L("Message")</dt>
+                <dd class="nl-preview-body"></dd>
+            </dl>
+            <ul class="nl-actions">
+                <li><button type="button" class="nl-btn nl-btn-secondary nl-btn-cancel-preview">@L("cmdCancelPreview")</button></li>
             </ul>
         </div>
 

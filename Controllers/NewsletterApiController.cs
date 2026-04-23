@@ -557,13 +557,13 @@ namespace Dnn.Modules.Newsletters.Controllers
             switch (statusType)
             {
                 case "success":
-                    cssClass = "dnnFormMessage dnnFormSuccess";
+                    cssClass = "nl-msg nl-msg-success";
                     break;
                 case "error":
-                    cssClass = "dnnFormMessage dnnFormError";
+                    cssClass = "nl-msg nl-msg-error";
                     break;
                 default:
-                    cssClass = "dnnFormMessage dnnFormWarning";
+                    cssClass = "nl-msg nl-msg-warning";
                     break;
             }
 

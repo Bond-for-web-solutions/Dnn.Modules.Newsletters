@@ -1,152 +1,545 @@
-.dnnNewsletters .dnnFormItem input[type="text"], .dnnNewsletters .dnnFormItem .dnnFormInput, .dnnNewsletters .dnnFormItem textarea {
-    width: 50%;
+/* ==========================================================================
+   Newsletters module — fully scoped under .nl-module
+   - All class names prefixed with "nl-" so they cannot collide with DNN.
+   - Spacing is driven by flex/grid `gap` and `padding`. The `margin` property
+     is never used for layout; it is only zeroed out on user-agent defaults.
+   - No DNN CSS variables; literal colors only.
+   ========================================================================== */
+
+.nl-module,
+.nl-module * {
+    box-sizing: border-box;
 }
-/* Override the gray default that some skins apply to required text inputs
-   (e.g. browser :invalid styling or .dnnFormItem.dnnFormRequired backgrounds). */
-.dnnNewsletters .dnnFormItem input[type="text"],
-.dnnNewsletters .dnnFormItem textarea {
-    background-color: #fff;
+
+/* Zero out every browser/user-agent margin inside the module so spacing is
+   exclusively controlled by parent flex/grid `gap` and component padding. */
+.nl-module,
+.nl-module h1, .nl-module h2, .nl-module h3, .nl-module h4, .nl-module p,
+.nl-module ul, .nl-module ol, .nl-module li,
+.nl-module dl, .nl-module dt, .nl-module dd,
+.nl-module fieldset, .nl-module legend,
+.nl-module input, .nl-module select, .nl-module textarea,
+.nl-module button, .nl-module a,
+.nl-module label, .nl-module table, .nl-module tr, .nl-module td, .nl-module th {
+    margin: 0;
+}
+
+.nl-module {
+    --nl-bg: #ffffff;
+    --nl-surface: #f7f9fc;
+    --nl-border: #e1e5ec;
+    --nl-border-strong: #c9cfd9;
+    --nl-text: #1f2937;
+    --nl-text-muted: #6b7280;
+    --nl-primary: #2563eb;
+    --nl-primary-hover: #1d4ed8;
+    --nl-primary-soft: rgba(37, 99, 235, 0.12);
+    --nl-danger: #dc2626;
+    --nl-success: #059669;
+    --nl-warning: #b45309;
+    --nl-radius: 8px;
+    --nl-radius-sm: 6px;
+    --nl-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+
+    color: var(--nl-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    background: var(--nl-bg);
+    border: 1px solid var(--nl-border);
+    border-radius: var(--nl-radius);
+    box-shadow: var(--nl-shadow);
+    margin: 0 auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 768px;
+}
+
+.nl-module ul,
+.nl-module ol {
+    list-style: none;
+    padding: 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tabs                                                                        */
+/* -------------------------------------------------------------------------- */
+.nl-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--nl-border);
+}
+.nl-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 18px;
+    color: var(--nl-text-muted);
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    border-radius: var(--nl-radius-sm) var(--nl-radius-sm) 0 0;
+    transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+    user-select: none;
+}
+.nl-tab:hover {
+    color: var(--nl-primary);
+    background: var(--nl-primary-soft);
+}
+.nl-tab-active {
+    color: var(--nl-primary);
+    border-bottom-color: var(--nl-primary);
+    background: transparent;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Form layout                                                                 */
+/* -------------------------------------------------------------------------- */
+.nl-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.nl-panel {
+    display: block;
+}
+.nl-panel[hidden] {
+    display: none;
+}
+.nl-fieldset {
+    border: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.nl-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+}
+.nl-row[hidden] {
+    display: none;
+}
+.nl-label {
+    text-align: left;
+    color: var(--nl-text);
+    font-weight: 600;
+}
+.nl-label label {
+    font-weight: 600;
+    color: var(--nl-text);
+}
+.nl-control {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    width: 100%;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Inputs                                                                      */
+/* -------------------------------------------------------------------------- */
+.nl-input {
+    width: 100%;
+    max-width: 450px;
+    padding: 6px 10px;
+    font: inherit;
+    color: var(--nl-text);
+    background: var(--nl-bg);
     background-image: none;
+    border: 1px solid var(--nl-border-strong);
+    border-radius: var(--nl-radius-sm);
+    box-shadow: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: auto;
 }
-.dnnNewsletters .dnnFormItem input[type="text"]:required,
-.dnnNewsletters .dnnFormItem input[type="text"]:invalid,
-.dnnNewsletters .dnnFormItem textarea:required,
-.dnnNewsletters .dnnFormItem textarea:invalid {
-    background-color: #fff;
+.nl-textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+.nl-input:focus {
+    border-color: var(--nl-primary);
+    box-shadow: 0 0 0 3px var(--nl-primary-soft);
+    outline: none;
+}
+/* Defeat browser :invalid red glow on required fields */
+.nl-input:required,
+.nl-input:invalid {
+    background-color: var(--nl-bg);
     background-image: none;
     box-shadow: none;
 }
-.dnnNewsletters .dnnFormItem input[type="checkbox"] {
-    width: auto;
-    float: none;
-}
-.dnnNewsletters .dnnFormItem input[type="radio"] {
-    width: auto;
-}
-.dnnTextEditor label, .dnnTextEditor .dnnFormLabel, .dnnTextEditor .dnnTooltip label {
-    width: auto;
-    margin-top: 0;
-    font-weight: normal;
-    padding: 0 15px 0 5px;
-    text-align: right;
-}
-.dnnTextEditor .dnnFormItem .dnnTooltip {
-    width: 34%;
-}
-span.dnnNewsletterRadios {
-    display: block;
-    float: left;
-    overflow: hidden;
-    width: 50%;
-}
-span.dnnNewsletterRadios label {
-    width: auto;
-    text-align: left;
-    font-weight: normal;
-    margin-top: 0;
-    padding: 0 15px 0 5px;
-}
-.dnnFormItem.dnnNewsletterAttachment .urlControl {
-    float: left;
-}
-.dnnFormItem.dnnNewsletterAttachment .dnnFormItem {
-    padding: 0;
-    margin: 0;
-}
-.dnnFormItem.dnnNewsletterAttachment .dnnFormLabel {
-    text-align: left;
-    font-weight: normal;
+
+/* Select chevron */
+.nl-select {
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--nl-text-muted) 50%),
+        linear-gradient(135deg, var(--nl-text-muted) 50%, transparent 50%);
+    background-position:
+        calc(100% - 18px) 50%,
+        calc(100% - 13px) 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 32px;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
-.dnnFormItem.dnnNewsletterAttachment .dnnFormMessage {
-    margin: 0;
+/* -------------------------------------------------------------------------- */
+/* Native checkbox & radio                                                     */
+/* (using accent-color so we get a modern themed control without DNN's spans)  */
+/* -------------------------------------------------------------------------- */
+.nl-checkbox,
+.nl-radio {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--nl-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+    vertical-align: middle;
+    padding: 6px 10px;
+    box-sizing: content-box;
 }
-.dnnFormItem.dnnNewsletterAttachment .dnnUrlControl .dnnFormLabel {
-    font-weight: normal;
-    width: auto;
-    margin-top: 0;
-}
-.dnnFormItem.dnnNewsletterAttachment .dnnUrlControl br {
-    display: none;
+.nl-check-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    color: var(--nl-text);
+    font-weight: 400;
 }
 
-.dnnNewsletters .dnnLangSelector {
-    width: 50%;
-    float: left;
-}
-.dnnLangSelector ul li {
-    float: left;
-    display: block;
-    width: 50%;
-}
-.dnnLangSelector ul li label {
-    width: auto;
-}
-.dnnRolesGrid {
-    width: 50%;
-    float: left; 
-    margin-bottom: 18px;  
-}
-.dnnRolesGrid > table{
+/* Language list */
+.nl-lang {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
     width: 100%;
-    border: 1px solid #ccc;
-}
-.dnnRolesGrid > table td{
-    padding: 6px 0 6px 12px;
-    vertical-align: middle;
+    max-width: 640px;
 }
 
-.dnnRolesGrid > table tr.dnnGridHeader td{
-    text-align: center;
+/* Radio group (Synchronous / Asynchronous) */
+.nl-module .nl-control.nl-radios {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: center;
+    width: 100%;
+    max-width: 640px;
 }
 
-.dnnNewsletters .newMessage .dnnFormItem textarea.noResize{ resize: none;}
-
-.dnnNewsletters ul.token-input-list-facebook{ width: 40%;margin-bottom: 18px;}
-
-.ckediv div:nth-of-type(2) {
-    display: inline-block;
-}
-.dnnActions {
-    padding-inline-start: 0;
+/* Required-field asterisk */
+.nl-required {
+    color: var(--nl-danger);
+    padding-inline-start: 2px;
+    font-weight: 700;
 }
 
-/* Required-field indicator (paired with aria-required for screen readers). */
-.dnnNewsletters .required-marker {
-    color: #c00;
-    margin-left: 2px;
-    font-weight: bold;
+/* -------------------------------------------------------------------------- */
+/* CKEditor wrapper                                                            */
+/* -------------------------------------------------------------------------- */
+.nl-row-ck {
+    grid-template-columns: 180px minmax(0, 1fr);
+}
+.nl-ck {
+    width: 100%;
+    max-width: 100%;
+}
+.nl-ck .cke,
+.nl-ck .cke_chrome {
+    border-radius: var(--nl-radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--nl-border-strong);
 }
 
-/* In-flight spinner shown next to Send / Preview while a request is running. */
-.dnnNewsletters .newsletter-spinner {
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: 8px;
+/* Recipients token-input control (third-party plugin output, kept as-is) */
+.nl-module ul.token-input-list-facebook {
+    width: 100%;
+    max-width: 450px;
+    min-height: 35px;
+    padding: 4px 8px;
+    border-radius: var(--nl-radius-sm);
+    border: 1px solid var(--nl-border-strong);
+    box-shadow: none;
+    background: var(--nl-bg);
 }
-.dnnNewsletters .newsletter-spinner[hidden] {
+.nl-module ul.token-input-list-facebook li input {
+    padding: 6px 4px !important;
+    font-size: 14px !important;
+    background: transparent !important;
+}
+.nl-module ul.token-input-list-facebook:focus-within {
+    border-color: var(--nl-primary);
+    box-shadow: 0 0 0 3px var(--nl-primary-soft);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Status messages                                                             */
+/* The .nl-status container only carries an initial server-rendered status     */
+/* message that newsletter.js immediately converts into a toast and empties.   */
+/* It is intentionally never visible to the user.                              */
+/* -------------------------------------------------------------------------- */
+.nl-status {
     display: none;
 }
-.dnnNewsletters .newsletter-spinner-icon {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid #ccc;
-    border-top-color: #1976d2;
-    border-radius: 50%;
-    animation: dnn-newsletter-spin 0.8s linear infinite;
+.nl-msg {
+    padding: 12px 16px;
+    border-radius: var(--nl-radius-sm);
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
-@keyframes dnn-newsletter-spin {
+.nl-msg-success {
+    background: rgba(5, 150, 105, 0.08);
+    border-color: rgba(5, 150, 105, 0.25);
+    color: var(--nl-success);
+}
+.nl-msg-error {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.25);
+    color: var(--nl-danger);
+}
+.nl-msg-warning {
+    background: rgba(217, 119, 6, 0.10);
+    border-color: rgba(217, 119, 6, 0.30);
+    color: var(--nl-warning);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Toast (transient status notification)                                       */
+/* Lives in a top-level container fixed to the viewport so it floats above     */
+/* the module. Auto-hides after 3s; new messages reset the timer.              */
+/* -------------------------------------------------------------------------- */
+.nl-toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    top: auto;
+    left: auto;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 12px;
+    pointer-events: none;
+    max-width: calc(100vw - 48px);
+}
+.nl-toast {
+    pointer-events: auto;
+    min-width: 300px;
+    max-width: 420px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #6b7280;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18), 0 4px 10px rgba(15, 23, 42, 0.08);
+    background: #ffffff;
+    color: #111827;
+    font-size: 14px;
+    line-height: 1.45;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.nl-toast-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+.nl-toast-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+}
+.nl-toast-body {
+    flex: 1;
+    word-wrap: break-word;
+    color: #111827;
+}
+.nl-toast-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+}
+.nl-toast-close:hover {
+    color: #374151;
+    background: #f3f4f6;
+}
+.nl-toast-success { border-left-color: #059669; }
+.nl-toast-success .nl-toast-icon { background: #059669; }
+.nl-toast-error { border-left-color: #dc2626; }
+.nl-toast-error .nl-toast-icon { background: #dc2626; }
+.nl-toast-warning { border-left-color: #d97706; }
+.nl-toast-warning .nl-toast-icon { background: #d97706; }
+
+/* -------------------------------------------------------------------------- */
+/* Action buttons                                                              */
+/* -------------------------------------------------------------------------- */
+.nl-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+.nl-actions li {
+    display: inline-flex;
+}
+.nl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 18px;
+    font: inherit;
+    font-weight: 600;
+    border-radius: var(--nl-radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    background: transparent;
+}
+.nl-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.nl-btn-primary {
+    background: var(--nl-primary);
+    color: #fff;
+    border-color: var(--nl-primary);
+}
+.nl-btn-primary:hover:not(:disabled),
+.nl-btn-primary:focus:not(:disabled) {
+    background: var(--nl-primary-hover);
+    border-color: var(--nl-primary-hover);
+    color: #fff;
+}
+.nl-btn-secondary {
+    background: var(--nl-bg);
+    color: var(--nl-primary);
+    border-color: var(--nl-border-strong);
+}
+.nl-btn-secondary:hover:not(:disabled),
+.nl-btn-secondary:focus:not(:disabled) {
+    background: var(--nl-primary-soft);
+    border-color: var(--nl-primary);
+    color: var(--nl-primary-hover);
+}
+
+/* Spinner */
+.nl-spinner {
+    display: inline-flex;
+    align-items: center;
+}
+.nl-spinner[hidden] {
+    display: none;
+}
+.nl-spinner-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--nl-border);
+    border-top-color: var(--nl-primary);
+    border-radius: 50%;
+    animation: nl-spin 0.8s linear infinite;
+}
+@keyframes nl-spin {
     to { transform: rotate(360deg); }
 }
 
-/* Visible focus indicator for keyboard users (WCAG 2.4.7). */
-.dnnNewsletters button:focus,
-.dnnNewsletters a.dnnPrimaryAction:focus,
-.dnnNewsletters a.dnnSecondaryAction:focus,
-.dnnNewsletters input:focus,
-.dnnNewsletters select:focus,
-.dnnNewsletters textarea:focus {
-    outline: 2px solid #1976d2;
-    outline-offset: 1px;
+/* -------------------------------------------------------------------------- */
+/* Preview                                                                     */
+/* -------------------------------------------------------------------------- */
+.nl-preview {
+    background: var(--nl-surface);
+    border: 1px solid var(--nl-border);
+    border-radius: var(--nl-radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.nl-preview[hidden] {
+    display: none;
+}
+.nl-preview-list {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 8px 16px;
+}
+.nl-preview-list dt {
+    font-weight: 600;
+    color: var(--nl-text-muted);
+    text-align: left;
+    padding-top: 2px;
+}
+.nl-preview-list dd {
+    color: var(--nl-text);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--nl-border);
+}
+.nl-preview-list dt:last-of-type + dd,
+.nl-preview-list dd:last-of-type {
+    border-bottom: none;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Focus visibility (WCAG 2.4.7)                                               */
+/* -------------------------------------------------------------------------- */
+.nl-module button:focus-visible,
+.nl-module a:focus-visible,
+.nl-module input:focus-visible,
+.nl-module select:focus-visible,
+.nl-module textarea:focus-visible,
+.nl-tab:focus-visible {
+    outline: 2px solid var(--nl-primary);
+    outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Responsive                                                                  */
+/* -------------------------------------------------------------------------- */
+@media (max-width: 760px) {
+    .nl-module {
+        padding: 16px;
+        gap: 16px;
+    }
+    .nl-actions {
+        width: 100%;
+    }
+    .nl-btn {
+        flex: 1;
+    }
+    .nl-preview-list {
+        grid-template-columns: 1fr;
+    }
+    .nl-preview-list dt {
+        text-align: left;
+    }
 }

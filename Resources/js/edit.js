@@ -1,6 +1,5 @@
 ﻿$(function () {
-
-    $('.dnnNewsletters').each(function () {
+    $('.nl-module').each(function () {
         var $module = $(this);
         var moduleId = $module.attr('data-moduleid');
 
@@ -10,34 +9,4 @@
 
         CKEDITOR.replace('Message', editorConfigeditortxtContent);
     });
-
-    //var initPage = function () {
-    //
-    //    $('#dnnEditHtml form').ajaxForm({
-    //        success: function () {
-    //           window.location = $('#dnnEditHtml').attr('data-returnurl');
-    //        },
-    //        beforeSerialize: function () {
-    //            for (var instanceName in CKEDITOR.instances)
-    //                CKEDITOR.instances[instanceName].updateElement();
-    //        }
-    //    });
-
-
-        //$('#cmdEdit').click(function () {
-        //   var action = $(this).attr('data-action');
-        //    $('#dnnEditHtml form').ajaxSubmit({
-        //        url: action,
-        //        target: '#dnnEditHtml',
-        //        success: function () {
-        //            initPage();
-        //            CKEDITOR.replace('EditorContent', editorConfigeditortxtContent);
-        //        },
-        //    });
-        //    // return false to prevent normal browser submit and page navigation
-        //    return false;
-        //});
-
-    //}
-    //initPage();
 });
