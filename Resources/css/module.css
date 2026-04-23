@@ -1,6 +1,21 @@
 .dnnNewsletters .dnnFormItem input[type="text"], .dnnNewsletters .dnnFormItem .dnnFormInput, .dnnNewsletters .dnnFormItem textarea {
     width: 50%;
 }
+/* Override the gray default that some skins apply to required text inputs
+   (e.g. browser :invalid styling or .dnnFormItem.dnnFormRequired backgrounds). */
+.dnnNewsletters .dnnFormItem input[type="text"],
+.dnnNewsletters .dnnFormItem textarea {
+    background-color: #fff;
+    background-image: none;
+}
+.dnnNewsletters .dnnFormItem input[type="text"]:required,
+.dnnNewsletters .dnnFormItem input[type="text"]:invalid,
+.dnnNewsletters .dnnFormItem textarea:required,
+.dnnNewsletters .dnnFormItem textarea:invalid {
+    background-color: #fff;
+    background-image: none;
+    box-shadow: none;
+}
 .dnnNewsletters .dnnFormItem input[type="checkbox"] {
     width: auto;
     float: none;

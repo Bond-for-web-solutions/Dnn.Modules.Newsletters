@@ -13,7 +13,7 @@
         var sf = $.ServicesFramework(mid);
         var apiRoot = sf.getServiceRoot('Newsletters');
 
-        var $form = $module.find('form').first();
+        var $form = $module.find('.newsletter-form').first();
 
         // Prevent default form submission — all actions go through AJAX
         $form.on('submit', function (e) { e.preventDefault(); });
@@ -32,8 +32,7 @@
         // Mark the CKEditor-bound textarea as required for assistive tech.
         $module.find('textarea[name="Message"]').attr('aria-required', 'true');
 
-        // Set multipart encoding for file uploads
-        $form.attr('enctype', 'multipart/form-data').attr('encoding', 'multipart/form-data');
+        // Set multipart encoding for file uploads on the outer WebForms form
         $('form#Form').attr('enctype', 'multipart/form-data').attr('encoding', 'multipart/form-data');
 
         // Preview button

@@ -30,7 +30,6 @@ using DotNetNuke.Services.Localization;
 using DotNetNuke.Web.MvcPipeline.ModuleControl;
 using DotNetNuke.Web.MvcPipeline.ModuleControl.Page;
 using DotNetNuke.Web.MvcPipeline.ModuleControl.Razor;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,6 +45,15 @@ namespace Dnn.Modules.Newsletters.Controls
     [ValidateInput(false)]
     public class NewsletterViewControl : RazorModuleControlBase, IPageContributor
     {
+        private readonly DotNetNuke.Abstractions.Application.IHostSettings _hostSettings;
+
+        /// <summary>Initializes a new instance of the <see cref="NewsletterViewControl"/> class.</summary>
+        /// <param name="hostSettings">Host settings injected by the DI container.</param>
+        public NewsletterViewControl(DotNetNuke.Abstractions.Application.IHostSettings hostSettings)
+        {
+            _hostSettings = hostSettings;
+        }
+
         private UserInfo CurrentUser => UserController.Instance.GetCurrentUserInfo();
 
         /// <summary>Invokes the newsletter view control and returns the Razor module result.</summary>
@@ -132,7 +140,6 @@ namespace Dnn.Modules.Newsletters.Controls
 
         private string GetInitialEntries()
         {
-            var hostSettings = DependencyProvider.GetRequiredService<DotNetNuke.Abstractions.Application.IHostSettings>();
             int id;
             UserInfo user;
             RoleInfo role;
@@ -140,7 +147,7 @@ namespace Dnn.Modules.Newsletters.Controls
 
             foreach (var value in (Request.QueryString["users"] ?? string.Empty).Split(','))
             {
-                if (int.TryParse(value, out id) && (user = UserController.GetUserById(hostSettings, PortalId, id)) != null)
+                if (int.TryParse(value, out id) && (user = UserController.GetUserById(_hostSettings, PortalId, id)) != null)
                 {
                     entities.AppendFormat(@"{{ ""id"": ""user-{0}"", ""name"": ""{1}"" }},", user.UserID, JsonEscape(user.DisplayName));
                 }
