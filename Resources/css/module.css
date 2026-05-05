@@ -3,7 +3,9 @@
    - All class names prefixed with "nl-" so they cannot collide with DNN.
    - Spacing is driven by flex/grid `gap` and `padding`. The `margin` property
      is never used for layout; it is only zeroed out on user-agent defaults.
-   - No DNN CSS variables; literal colors only.
+   - Themed via DNN CSS variables (--dnn-color-*, --dnn-controls-*) so the
+     module follows the active DNN theme. Local `--nl-*` aliases map onto
+     the DNN tokens to keep selectors below readable.
    ========================================================================== */
 
 .nl-module,
@@ -25,25 +27,36 @@
 }
 
 .nl-module {
-    --nl-bg: #ffffff;
-    --nl-surface: #f7f9fc;
-    --nl-border: #e1e5ec;
-    --nl-border-strong: #c9cfd9;
-    --nl-text: #1f2937;
-    --nl-text-muted: #6b7280;
-    --nl-primary: #2563eb;
-    --nl-primary-hover: #1d4ed8;
-    --nl-primary-soft: rgba(37, 99, 235, 0.12);
-    --nl-danger: #dc2626;
-    --nl-success: #059669;
-    --nl-warning: #b45309;
-    --nl-radius: 8px;
-    --nl-radius-sm: 6px;
+    /* Map DNN design tokens onto local aliases used throughout this file.
+       Fallbacks are provided so the module still renders sensibly if the
+       DNN variables are not loaded on the host page. */
+    --nl-bg: var(--dnn-color-background, #ffffff);
+    --nl-surface: var(--dnn-color-background-light, #f7f9fc);
+    --nl-border: var(--dnn-color-neutral, #e1e5ec);
+    --nl-border-strong: var(--dnn-color-neutral-dark, #c9cfd9);
+    --nl-text: var(--dnn-color-foreground, #1f2937);
+    --nl-text-muted: var(--dnn-color-foreground-light, #6b7280);
+    --nl-primary: var(--dnn-color-primary, #2563eb);
+    --nl-primary-hover: var(--dnn-color-primary-dark, #1d4ed8);
+    --nl-primary-contrast: var(--dnn-color-primary-contrast, #ffffff);
+    --nl-primary-soft: rgba(var(--dnn-color-primary-r, 37), var(--dnn-color-primary-g, 99), var(--dnn-color-primary-b, 235), 0.12);
+    --nl-danger: var(--dnn-color-danger, #dc2626);
+    --nl-danger-soft: rgba(var(--dnn-color-danger-r, 220), var(--dnn-color-danger-g, 53), var(--dnn-color-danger-b, 69), 0.10);
+    --nl-danger-border: rgba(var(--dnn-color-danger-r, 220), var(--dnn-color-danger-g, 53), var(--dnn-color-danger-b, 69), 0.30);
+    --nl-success: var(--dnn-color-success, #059669);
+    --nl-success-soft: rgba(var(--dnn-color-success-r, 40), var(--dnn-color-success-g, 167), var(--dnn-color-success-b, 69), 0.10);
+    --nl-success-border: rgba(var(--dnn-color-success-r, 40), var(--dnn-color-success-g, 167), var(--dnn-color-success-b, 69), 0.30);
+    --nl-warning: var(--dnn-color-warning-dark, #b45309);
+    --nl-warning-soft: rgba(var(--dnn-color-warning-r, 255), var(--dnn-color-warning-g, 193), var(--dnn-color-warning-b, 7), 0.15);
+    --nl-warning-border: rgba(var(--dnn-color-warning-r, 255), var(--dnn-color-warning-g, 193), var(--dnn-color-warning-b, 7), 0.40);
+    --nl-radius: var(--dnn-controls-radius, 8px);
+    --nl-radius-sm: var(--dnn-controls-radius, 6px);
+    --nl-control-padding: var(--dnn-controls-padding, 9px);
     --nl-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
 
     color: var(--nl-text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-size: 14px;
+    font-size: var(--dnn-base-font-size, 14px);
     line-height: 1.5;
     background: var(--nl-bg);
     border: 1px solid var(--nl-border);
@@ -299,18 +312,18 @@
     gap: 10px;
 }
 .nl-msg-success {
-    background: rgba(5, 150, 105, 0.08);
-    border-color: rgba(5, 150, 105, 0.25);
+    background: var(--nl-success-soft);
+    border-color: var(--nl-success-border);
     color: var(--nl-success);
 }
 .nl-msg-error {
-    background: rgba(220, 38, 38, 0.08);
-    border-color: rgba(220, 38, 38, 0.25);
+    background: var(--nl-danger-soft);
+    border-color: var(--nl-danger-border);
     color: var(--nl-danger);
 }
 .nl-msg-warning {
-    background: rgba(217, 119, 6, 0.10);
-    border-color: rgba(217, 119, 6, 0.30);
+    background: var(--nl-warning-soft);
+    border-color: var(--nl-warning-border);
     color: var(--nl-warning);
 }
 
@@ -337,13 +350,13 @@
     min-width: 300px;
     max-width: 420px;
     padding: 14px 16px;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    border-left: 4px solid #6b7280;
+    border-radius: var(--nl-radius);
+    border: 1px solid var(--nl-border);
+    border-left: 4px solid var(--nl-text-muted);
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18), 0 4px 10px rgba(15, 23, 42, 0.08);
-    background: #ffffff;
-    color: #111827;
-    font-size: 14px;
+    background: var(--nl-bg);
+    color: var(--nl-text);
+    font-size: var(--dnn-base-font-size, 14px);
     line-height: 1.45;
     display: flex;
     align-items: center;
@@ -366,36 +379,36 @@
     justify-content: center;
     font-size: 13px;
     font-weight: 700;
-    color: #fff;
+    color: var(--nl-primary-contrast);
     line-height: 1;
 }
 .nl-toast-body {
     flex: 1;
     word-wrap: break-word;
-    color: #111827;
+    color: var(--nl-text);
 }
 .nl-toast-close {
     flex-shrink: 0;
     background: none;
     border: none;
-    color: #9ca3af;
+    color: var(--nl-text-muted);
     font-size: 18px;
     line-height: 1;
     cursor: pointer;
     padding: 2px 4px;
-    border-radius: 4px;
+    border-radius: var(--nl-radius-sm);
     transition: color 0.15s, background 0.15s;
 }
 .nl-toast-close:hover {
-    color: #374151;
-    background: #f3f4f6;
+    color: var(--nl-text);
+    background: var(--nl-surface);
 }
-.nl-toast-success { border-left-color: #059669; }
-.nl-toast-success .nl-toast-icon { background: #059669; }
-.nl-toast-error { border-left-color: #dc2626; }
-.nl-toast-error .nl-toast-icon { background: #dc2626; }
-.nl-toast-warning { border-left-color: #d97706; }
-.nl-toast-warning .nl-toast-icon { background: #d97706; }
+.nl-toast-success { border-left-color: var(--nl-success); }
+.nl-toast-success .nl-toast-icon { background: var(--nl-success); color: var(--dnn-color-success-contrast, #ffffff); }
+.nl-toast-error { border-left-color: var(--nl-danger); }
+.nl-toast-error .nl-toast-icon { background: var(--nl-danger); color: var(--dnn-color-danger-contrast, #ffffff); }
+.nl-toast-warning { border-left-color: var(--dnn-color-warning, #d97706); }
+.nl-toast-warning .nl-toast-icon { background: var(--dnn-color-warning, #d97706); color: var(--dnn-color-warning-contrast, #ffffff); }
 
 /* -------------------------------------------------------------------------- */
 /* Action buttons                                                              */
@@ -431,14 +444,14 @@
 }
 .nl-btn-primary {
     background: var(--nl-primary);
-    color: #fff;
+    color: var(--nl-primary-contrast);
     border-color: var(--nl-primary);
 }
 .nl-btn-primary:hover:not(:disabled),
 .nl-btn-primary:focus:not(:disabled) {
     background: var(--nl-primary-hover);
     border-color: var(--nl-primary-hover);
-    color: #fff;
+    color: var(--nl-primary-contrast);
 }
 .nl-btn-secondary {
     background: var(--nl-bg);

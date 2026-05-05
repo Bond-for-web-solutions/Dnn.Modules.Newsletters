@@ -1,5 +1,6 @@
 /* Attachment Picker — fully scoped under .nl-attachment.
-   No DNN class names; spacing via flex/grid `gap` and padding only. */
+   No DNN class names; spacing via flex/grid `gap` and padding only.
+   Themed via DNN CSS variables (--dnn-color-*, --dnn-controls-*). */
 
 .nl-attachment {
     overflow: visible;
@@ -49,7 +50,7 @@
 .nl-attachment-rowlabel {
     text-align: right;
     font-weight: 500;
-    color: #1f2937;
+    color: var(--dnn-color-foreground, #1f2937);
 }
 
 .nl-attachment-row .nl-input {
@@ -62,23 +63,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px dashed #c0c8d0;
-    border-radius: 8px;
-    background: #f7f9fc;
+    border: 2px dashed var(--dnn-color-neutral-dark, #c0c8d0);
+    border-radius: var(--dnn-controls-radius, 8px);
+    background: var(--dnn-color-background-light, #f7f9fc);
     cursor: pointer;
     transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
     padding: 12px;
     min-height: 100px;
 }
 .nl-dropzone:hover {
-    border-color: #8899aa;
-    background: #eef2f7;
+    border-color: var(--dnn-color-foreground-light, #8899aa);
+    background: var(--dnn-color-surface-light, #eef2f7);
 }
 .nl-dropzone-dragover {
-    border-color: #2563eb;
-    background: rgba(37, 99, 235, 0.10);
+    border-color: var(--dnn-color-primary, #2563eb);
+    background: rgba(var(--dnn-color-primary-r, 37), var(--dnn-color-primary-g, 99), var(--dnn-color-primary-b, 235), 0.10);
     border-style: solid;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 0 3px rgba(var(--dnn-color-primary-r, 37), var(--dnn-color-primary-g, 99), var(--dnn-color-primary-b, 235), 0.15);
 }
 
 .nl-dropzone-content {
@@ -87,7 +88,7 @@
     align-items: center;
     gap: 4px;
     text-align: center;
-    color: #6b7280;
+    color: var(--dnn-color-foreground-light, #6b7280);
     pointer-events: none;
 }
 .nl-dropzone-content p {
@@ -95,7 +96,7 @@
     line-height: 1.4;
 }
 .nl-dropzone-browse {
-    color: #2563eb;
+    color: var(--dnn-color-primary, #2563eb);
     text-decoration: underline;
     pointer-events: auto;
     cursor: pointer;
@@ -117,19 +118,19 @@
     align-items: center;
     gap: 8px;
     padding: 6px 10px;
-    background: #f5f7fa;
-    border: 1px solid #dde0e4;
-    border-radius: 6px;
+    background: var(--dnn-color-background-light, #f5f7fa);
+    border: 1px solid var(--dnn-color-neutral, #dde0e4);
+    border-radius: var(--dnn-controls-radius, 6px);
     transition: background-color 0.15s;
 }
 .nl-attachment-item:hover {
-    background: #edf0f4;
+    background: var(--dnn-color-surface-light, #edf0f4);
 }
 
 .nl-attachment-icon {
     font-size: 15px;
     flex-shrink: 0;
-    color: #6b7280;
+    color: var(--dnn-color-foreground-light, #6b7280);
 }
 
 .nl-attachment-name {
@@ -138,26 +139,26 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #1f2937;
+    color: var(--dnn-color-foreground, #1f2937);
 }
 
 .nl-attachment-remove {
     background: none;
     border: 1px solid transparent;
-    color: #dc2626;
+    color: var(--dnn-color-danger, #dc2626);
     font-size: 16px;
     cursor: pointer;
     padding: 1px 6px;
     line-height: 1;
-    border-radius: 4px;
+    border-radius: var(--dnn-controls-radius, 4px);
     opacity: 0.6;
     transition: opacity 0.15s, background-color 0.15s, border-color 0.15s;
     flex-shrink: 0;
 }
 .nl-attachment-remove:hover {
     opacity: 1;
-    background: rgba(220, 38, 38, 0.08);
-    border-color: rgba(220, 38, 38, 0.30);
+    background: rgba(var(--dnn-color-danger-r, 220), var(--dnn-color-danger-g, 53), var(--dnn-color-danger-b, 69), 0.08);
+    border-color: rgba(var(--dnn-color-danger-r, 220), var(--dnn-color-danger-g, 53), var(--dnn-color-danger-b, 69), 0.30);
 }
 
 @media (max-width: 768px) {
