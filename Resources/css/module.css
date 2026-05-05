@@ -369,19 +369,6 @@
     opacity: 1;
     transform: translateY(0);
 }
-.nl-toast-icon {
-    flex-shrink: 0;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--nl-primary-contrast);
-    line-height: 1;
-}
 .nl-toast-body {
     flex: 1;
     word-wrap: break-word;
@@ -403,12 +390,18 @@
     color: var(--nl-text);
     background: var(--nl-surface);
 }
-.nl-toast-success { border-left-color: var(--nl-success); }
-.nl-toast-success .nl-toast-icon { background: var(--nl-success); color: var(--dnn-color-success-contrast, #ffffff); }
-.nl-toast-error { border-left-color: var(--nl-danger); }
-.nl-toast-error .nl-toast-icon { background: var(--nl-danger); color: var(--dnn-color-danger-contrast, #ffffff); }
-.nl-toast-warning { border-left-color: var(--dnn-color-warning, #d97706); }
-.nl-toast-warning .nl-toast-icon { background: var(--dnn-color-warning, #d97706); color: var(--dnn-color-warning-contrast, #ffffff); }
+.nl-toast-success { background: var(--dnn-color-success, #059669); color: #ffffff; border-left-color: var(--dnn-color-success, #059669); }
+.nl-toast-success .nl-toast-body { color: #ffffff; }
+.nl-toast-success .nl-toast-close { color: rgba(255,255,255,0.8); }
+.nl-toast-success .nl-toast-close:hover { color: #ffffff; background: rgba(255,255,255,0.15); }
+.nl-toast-error { background: var(--dnn-color-danger, #dc2626); color: #ffffff; border-left-color: var(--dnn-color-danger, #dc2626); }
+.nl-toast-error .nl-toast-body { color: #ffffff; }
+.nl-toast-error .nl-toast-close { color: rgba(255,255,255,0.8); }
+.nl-toast-error .nl-toast-close:hover { color: #ffffff; background: rgba(255,255,255,0.15); }
+.nl-toast-warning { background: var(--dnn-color-warning, #d97706); color: #ffffff; border-left-color: var(--dnn-color-warning, #d97706); }
+.nl-toast-warning .nl-toast-body { color: #ffffff; }
+.nl-toast-warning .nl-toast-close { color: rgba(255,255,255,0.8); }
+.nl-toast-warning .nl-toast-close:hover { color: #ffffff; background: rgba(255,255,255,0.15); }
 
 /* -------------------------------------------------------------------------- */
 /* Action buttons                                                              */

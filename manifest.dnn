@@ -37,7 +37,7 @@
                 <moduleControls>
                   <moduleControl>
                     <controlKey />
-                    <controlSrc>DotNetNuke.Web.MvcPipeline.ModuleControl.WebForms.WrapperModule, DotNetNuke.Web.MvcPipeline</controlSrc>
+                    <controlSrc>DesktopModules/Admin/Newsletters/Newsletter.ascx</controlSrc>
                     <mvcControlClass>Dnn.Modules.Newsletters.Controls.NewsletterViewControl, Dnn.Modules.Newsletters</mvcControlClass>
                     <controlTitle>WebForms View</controlTitle>
                     <controlType>View</controlType>

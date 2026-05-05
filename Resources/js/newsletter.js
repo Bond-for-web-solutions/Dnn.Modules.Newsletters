@@ -19,12 +19,6 @@
         return $toastContainer;
     }
 
-    function toastIconChar(type) {
-        if (type === 'success') return '\u2713';
-        if (type === 'error') return '\u00D7';
-        return '!';
-    }
-
     function showToast(message, type) {
         if (!message) return;
         type = type || 'warning';
@@ -37,7 +31,6 @@
 
         var $toast = $(
             '<div class="nl-toast nl-toast-' + type + '" role="alert">' +
-                '<span class="nl-toast-icon" aria-hidden="true">' + toastIconChar(type) + '</span>' +
                 '<span class="nl-toast-body"></span>' +
                 '<button type="button" class="nl-toast-close" aria-label="Dismiss">\u00D7</button>' +
             '</div>'

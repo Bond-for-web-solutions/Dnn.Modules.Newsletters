@@ -80,7 +80,7 @@
     <Content Include="Views\web.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="dnn_Newsletters.dnn">
+    <Content Include="manifest.dnn">
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
