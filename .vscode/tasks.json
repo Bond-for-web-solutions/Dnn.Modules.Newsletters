@@ -2,10 +2,17 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build DNN Newsletters",
+      "label": "Build DNN Theme",
       "type": "shell",
-      "command": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
-      "args": ["Dnn.Modules.Newsletters.sln", "-p:Configuration=Release"],
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.vscode\\build.ps1",
+        "-Configuration",
+        "Release"
+      ],
       "presentation": {
         "echo": true,
         "reveal": "always",

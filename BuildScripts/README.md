@@ -6,22 +6,22 @@ This folder contains MSBuild configuration files used to build and package the D
 
 | File | Description |
 |------|-------------|
-| `BuildProperties.props` | Build properties (DNN bin path, Visual Studio version/path) |
+| `BuildProperties.props` | Build properties (DNN bin path; Visual Studio version/path are auto-detected) |
 | `ModulePackage.targets` | MSBuild targets for creating DNN install and source packages |
 | `MSBuild.Community.Tasks.Targets` | Community tasks used by the packaging targets (Zip, XmlRead, etc.) |
 
 ## Configuration
 
-Edit `BuildProperties.props` to match your local environment:
+Usually you only need to change `DnnBinRoot` in `BuildProperties.props`:
 
 ```xml
 <!-- Path to your DNN installation's bin folder -->
 <DnnBinRoot>C:\DNN\<Project.Name>\bin\</DnnBinRoot>
-
-<!-- Visual Studio version and install path -->
-<VisualStudioVersion>18.0</VisualStudioVersion>
-<VisualStudioInstallationRoot>C:\Program Files\Microsoft Visual Studio\18\Community\</VisualStudioInstallationRoot>
 ```
+
+`VisualStudioVersion` and `VSToolsPath` are auto-detected from the running MSBuild engine
+(works with Community/Pro/Enterprise/Build Tools, any version). You can still override them
+via env var or `-p:` on the command line if needed.
 
 ## How to Build
 
